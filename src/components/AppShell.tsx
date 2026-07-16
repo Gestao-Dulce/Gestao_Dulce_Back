@@ -90,52 +90,10 @@ export function AppShell() {
           </Button>
         </div>
       </aside>
-
-      {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="border-b border-border px-4 md:px-10 py-4 flex items-center justify-between bg-card">
-          <div className="flex items-center gap-3">
-            {/* Mobile Navigation Trigger */}
-            <div className="md:hidden">
-              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-                <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
-                    <Menu className="size-5" />
-                    <span className="sr-only">Menu de navegação</span>
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="w-64 bg-sidebar text-sidebar-foreground p-0 flex flex-col justify-between">
-                  <div>
-                    <SheetHeader className="p-4 border-b border-sidebar-border text-left">
-                      <SheetTitle className="text-sidebar-foreground flex flex-col items-center">
-                        <img src={logoLucelian} alt="Doces Lucelian" className="max-w-[120px] h-auto object-contain" />
-                        <span className="text-[9px] tracking-[0.2em] uppercase text-sidebar-foreground/70 mt-2 block">
-                          Gestão Financeira
-                        </span>
-                      </SheetTitle>
-                    </SheetHeader>
-                    <div className="p-4">
-                      <NavLinks onClick={() => setMobileMenuOpen(false)} />
-                    </div>
-                  </div>
-
-                  <div className="p-4 border-t border-sidebar-border">
-                    <Button
-                      variant="ghost"
-                      onClick={() => {
-                        setMobileMenuOpen(false);
-                        handleLogout();
-                      }}
-                      className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground gap-3 font-normal cursor-pointer"
-                    >
-                      <LogOut className="size-4" />
-                      Sair
-                    </Button>
-                  </div>
-                </SheetContent>
-              </Sheet>
-            </div>
-
+        <header className="border-b border-border px-4 md:px-10 py-3 md:py-4 flex items-center justify-between bg-card">
+          {/* Desktop header view */}
+          <div className="hidden md:flex items-center justify-between w-full">
             <div>
               <div className="text-[10px] tracking-[0.2em] uppercase text-primary font-medium">
                 Painel
@@ -149,12 +107,61 @@ export function AppShell() {
                 })}
               </p>
             </div>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" onClick={toggle} aria-label="Alternar tema">
+                {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
+              </Button>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={toggle} aria-label="Alternar tema">
-              {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
-            </Button>
+          {/* Mobile header view */}
+          <div className="flex md:hidden items-center justify-between w-full">
+            {/* Left side: Menu toggle for sidebar */}
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+                  <Menu className="size-5" />
+                  <span className="sr-only">Menu de navegação</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-64 bg-sidebar text-sidebar-foreground p-0 flex flex-col justify-between">
+                <div>
+                  <SheetHeader className="p-4 border-b border-sidebar-border text-left">
+                    <SheetTitle className="text-sidebar-foreground flex flex-col items-center">
+                      <img src={logoLucelian} alt="Doces Lucelian" className="max-w-[120px] h-auto object-contain" />
+                      <span className="text-[9px] tracking-[0.2em] uppercase text-sidebar-foreground/70 mt-2 block">
+                        Gestão Financeira
+                      </span>
+                    </SheetTitle>
+                  </SheetHeader>
+                  <div className="p-4">
+                    <NavLinks onClick={() => setMobileMenuOpen(false)} />
+                  </div>
+                </div>
+
+                <div className="p-4 border-t border-sidebar-border">
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      handleLogout();
+                    }}
+                    className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground gap-3 font-normal cursor-pointer"
+                  >
+                    <LogOut className="size-4" />
+                    Sair
+                  </Button>
+                </div>
+              </SheetContent>
+            </Sheet>
+
+            {/* Right side: Icon (Logo) and theme toggle */}
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" onClick={toggle} aria-label="Alternar tema" className="size-8">
+                {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
+              </Button>
+              <img src={logoLucelian} alt="Doces Lucelian" className="h-8 w-auto object-contain" />
+            </div>
           </div>
         </header>
 
