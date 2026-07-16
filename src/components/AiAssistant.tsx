@@ -373,6 +373,7 @@ export function AiAssistant() {
 
       {/* Floating Action Button */}
       <Button
+        id="tour-ai-chat"
         size="icon"
         className={cn(
           "size-14 rounded-full shadow-2xl cursor-pointer transition-transform hover:scale-105 duration-300",

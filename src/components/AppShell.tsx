@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Users, ShoppingBag, CalendarClock, Moon, Sun, Package, UserPlus, LogOut, Menu, Truck } from "lucide-react";
+import { LayoutDashboard, Users, ShoppingBag, CalendarClock, Moon, Sun, Package, UserPlus, LogOut, Menu, Truck, HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
@@ -39,7 +39,7 @@ export function AppShell() {
   };
 
   const NavLinks = ({ onClick }: { onClick?: () => void }) => (
-    <nav className="flex flex-col gap-1 w-full">
+    <nav id="tour-nav" className="flex flex-col gap-1 w-full">
       {navigation.map(({ to, label, icon: Icon }) => {
         const active = to === "/" ? path === "/" : path.startsWith(to);
         return (
@@ -68,7 +68,7 @@ export function AppShell() {
       <aside className="w-64 shrink-0 bg-sidebar text-sidebar-foreground hidden md:flex flex-col justify-between border-r border-sidebar-border">
         <div className="flex flex-col">
           <div className="px-4 py-4">
-            <div className="flex items-center justify-center">
+            <div id="tour-logo" className="flex items-center justify-center">
               <img src={logoLucelian} alt="Doces Lucelian" className="max-w-[150px] h-auto object-contain" />
             </div>
             <div className="text-[10px] tracking-[0.2em] uppercase text-sidebar-foreground/70 mt-3 text-center">
@@ -109,8 +109,11 @@ export function AppShell() {
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" onClick={toggle} aria-label="Alternar tema">
+              <Button id="tour-theme-toggle" variant="ghost" size="icon" onClick={toggle} aria-label="Alternar tema">
                 {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
+              </Button>
+              <Button variant="ghost" size="icon" onClick={() => { import("@/lib/tour").then(m => m.iniciarTutorial()) }} aria-label="Tutorial">
+                <HelpCircle className="size-4" />
               </Button>
             </div>
           </div>
@@ -158,6 +161,9 @@ export function AppShell() {
 
             {/* Right side: Icon (Logo) and theme toggle */}
             <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" onClick={() => { import("@/lib/tour").then(m => m.iniciarTutorial()) }} aria-label="Tutorial" className="size-8 text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground">
+                <HelpCircle className="size-4" />
+              </Button>
               <Button variant="ghost" size="icon" onClick={toggle} aria-label="Alternar tema" className="size-8 text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground">
                 {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
               </Button>

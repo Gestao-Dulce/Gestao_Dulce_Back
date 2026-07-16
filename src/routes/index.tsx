@@ -172,7 +172,7 @@ function Dashboard() {
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div id="tour-metrics" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Kpi label="Faturamento bruto" value={brl(data.faturamento)} icon={<TrendingUp className="size-4" />} sub={label} />
         <Kpi label="Contas pagas" value={brl(data.contasPagas)} icon={<CheckCircle2 className="size-4" />} sub="Saídas confirmadas" />
         <Card>
