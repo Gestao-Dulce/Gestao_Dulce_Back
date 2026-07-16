@@ -1,5 +1,5 @@
 import { j as jsxRuntimeExports } from "../_libs/react.mjs";
-import { I as Input } from "./router-D-eArHJ1.mjs";
+import { I as Input } from "./router-BIKv-0Y-.mjs";
 function CurrencyInput({ value, onValueChange, ...rest }) {
   const display = (Number(value) || 0).toLocaleString("pt-BR", {
     minimumFractionDigits: 2,

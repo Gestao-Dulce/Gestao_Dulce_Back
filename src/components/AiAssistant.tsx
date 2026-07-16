@@ -91,22 +91,7 @@ ${JSON.stringify(contasRes.data ?? [])}
         const listData = await listRes.json() as any;
         const models = listData.models || [];
         const modelNames = models.map((m: any) => m.name || "");
-        
-        // Lista ordenada de prioridades de modelos estáveis
-        const targetModels = [
-          "models/gemini-1.5-flash",
-          "models/gemini-1.5-flash-latest",
-          "models/gemini-2.5-flash",
-          "models/gemini-1.5-pro",
-          "models/gemini-pro"
-        ];
-        
-        const foundModel = targetModels.find(target => modelNames.includes(target)) || 
-                           modelNames.find((name: string) => name.includes("gemini"));
-                           
-        if (foundModel) {
-          modelName = foundModel.replace("models/", "");
-        }
+        throw new Error("Modelos disponíveis na sua chave: " + JSON.stringify(modelNames));
       }
     } catch (e) {
       console.warn("Erro ao listar modelos disponíveis do Gemini:", e);

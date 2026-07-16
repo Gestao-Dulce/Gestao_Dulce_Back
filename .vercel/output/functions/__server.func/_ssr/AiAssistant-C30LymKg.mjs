@@ -1,5 +1,5 @@
-import { c as createServerRpc } from "./createServerRpc-RRwo7G81.mjs";
-import { c as createServerFn } from "./server-DgO7kyGp.mjs";
+import { c as createServerRpc } from "./createServerRpc-ANYJHmO2.mjs";
+import { c as createServerFn } from "./server-BDTaq3WQ.mjs";
 import "../_libs/seroval.mjs";
 import "../_libs/react.mjs";
 import "node:async_hooks";
@@ -99,11 +99,7 @@ Pergunta do usuário: ${message}`
       const listData = await listRes.json();
       const models = listData.models || [];
       const modelNames = models.map((m) => m.name || "");
-      const targetModels = ["models/gemini-1.5-flash", "models/gemini-1.5-flash-latest", "models/gemini-2.5-flash", "models/gemini-1.5-pro", "models/gemini-pro"];
-      const foundModel = targetModels.find((target) => modelNames.includes(target)) || modelNames.find((name) => name.includes("gemini"));
-      if (foundModel) {
-        modelName = foundModel.replace("models/", "");
-      }
+      throw new Error("Modelos disponíveis na sua chave: " + JSON.stringify(modelNames));
     }
   } catch (e) {
     console.warn("Erro ao listar modelos disponíveis do Gemini:", e);

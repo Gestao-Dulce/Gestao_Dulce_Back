@@ -1,6 +1,6 @@
 import { j as jsxRuntimeExports } from "../_libs/react.mjs";
 import { c as cva } from "../_libs/class-variance-authority.mjs";
-import { g as cn } from "./router-D-eArHJ1.mjs";
+import { g as cn } from "./router-BIKv-0Y-.mjs";
 const badgeVariants = cva(
   "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
   {
