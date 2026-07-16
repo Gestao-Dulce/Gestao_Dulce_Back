@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { MessageSquare, X, Send, Mic, MicOff, Bot, User, Loader2 } from "lucide-react";
+import { Cookie, X, Send, Mic, MicOff, User, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -270,9 +270,9 @@ export function AiAssistant() {
         <Card className="w-[360px] sm:w-[420px] h-[500px] mb-4 flex flex-col shadow-2xl border-primary/20 animate-in fade-in slide-in-from-bottom-6 duration-300">
           <CardHeader className="bg-primary text-primary-foreground py-3 px-4 flex flex-row items-center justify-between rounded-t-lg">
             <div className="flex items-center gap-2">
-              <Bot className="size-5" />
+              <Cookie className="size-5 text-amber-300 animate-pulse" />
               <div>
-                <CardTitle className="text-sm font-semibold">Assistente Lucelian</CardTitle>
+                <CardTitle className="text-sm font-semibold">Lulu — Assistente de Doces</CardTitle>
                 <span className="text-[10px] opacity-80 block">Online</span>
               </div>
             </div>
@@ -289,10 +289,10 @@ export function AiAssistant() {
           <CardContent className="flex-1 overflow-y-auto p-4 space-y-3 bg-muted/20">
             {messages.length === 0 && (
               <div className="text-center py-8 space-y-2">
-                <Bot className="size-10 mx-auto text-primary opacity-60 animate-bounce" />
-                <p className="text-xs font-semibold text-foreground">Olá! Sou o assistente da Doces Lucelian.</p>
+                <Cookie className="size-10 mx-auto text-amber-500 animate-bounce" />
+                <p className="text-xs font-semibold text-foreground">Olá! Sou a Lulu, assistente da Doces Lucelian.</p>
                 <p className="text-[11px] text-muted-foreground max-w-[80%] mx-auto">
-                  Você pode me fazer perguntas sobre vendas, produtos cadastrados, contas a pagar e clientes.
+                  Pergunte-me qualquer coisa sobre vendas, produtos cadastrados, contas a pagar e clientes!
                 </p>
               </div>
             )}
@@ -308,10 +308,10 @@ export function AiAssistant() {
                 <div
                   className={cn(
                     "size-7 rounded-full flex items-center justify-center shrink-0 text-white text-xs",
-                    msg.role === "user" ? "bg-primary" : "bg-zinc-600"
+                    msg.role === "user" ? "bg-primary" : "bg-amber-600"
                   )}
                 >
-                  {msg.role === "user" ? <User className="size-4" /> : <Bot className="size-4" />}
+                  {msg.role === "user" ? <User className="size-4" /> : <Cookie className="size-4" />}
                 </div>
                 <div
                   className={cn(
@@ -328,8 +328,8 @@ export function AiAssistant() {
 
             {loading && (
               <div className="flex gap-2 mr-auto max-w-[85%] items-center">
-                <div className="size-7 rounded-full flex items-center justify-center shrink-0 bg-zinc-600 text-white">
-                  <Bot className="size-4" />
+                <div className="size-7 rounded-full flex items-center justify-center shrink-0 bg-amber-600 text-white">
+                  <Cookie className="size-4 animate-spin" />
                 </div>
                 <div className="bg-card text-foreground p-3 rounded-lg border border-border rounded-tl-none shadow-sm flex items-center gap-2">
                   <Loader2 className="size-4 animate-spin text-primary" />
@@ -380,7 +380,7 @@ export function AiAssistant() {
         )}
         onClick={() => setOpen(!open)}
       >
-        {open ? <X className="size-6" /> : <MessageSquare className="size-6" />}
+        {open ? <X className="size-6" /> : <Cookie className="size-6 animate-pulse" />}
       </Button>
     </div>
   );
