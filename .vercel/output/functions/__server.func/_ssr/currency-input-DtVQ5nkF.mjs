@@ -1,5 +1,5 @@
 import { j as jsxRuntimeExports } from "../_libs/react.mjs";
-import { I as Input } from "./label-nM7b-b3G.mjs";
+import { I as Input } from "./label-DejT35X0.mjs";
 function CurrencyInput({ value, onValueChange, ...rest }) {
   const display = (Number(value) || 0).toLocaleString("pt-BR", {
     minimumFractionDigits: 2,

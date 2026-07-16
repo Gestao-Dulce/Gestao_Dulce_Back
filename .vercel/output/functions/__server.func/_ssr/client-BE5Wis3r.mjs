@@ -1,4 +1,4 @@
-import { c as createClient } from "../_libs/supabase__supabase-js.mjs";
+import { c as createClient } from "./index-DoFzyMbP.mjs";
 function createSupabaseClient() {
   const SUPABASE_URL = "https://oqjkrjsuskrcpmsjoyyb.supabase.co";
   const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_ZMaaavq90QdVpTaHFoPcRg_dyqUZYww";

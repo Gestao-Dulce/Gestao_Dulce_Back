@@ -7,7 +7,7 @@ import { t as twMerge } from "../_libs/tailwind-merge.mjs";
 import { S as Slot } from "../_libs/radix-ui__react-slot.mjs";
 import { c as cva } from "../_libs/class-variance-authority.mjs";
 import { T as Toaster$1 } from "../_libs/sonner.mjs";
-import { c as createServerFn, T as TSS_SERVER_FUNCTION, g as getServerFnById } from "./server-CdGkcVaG.mjs";
+import { c as createServerFn, T as TSS_SERVER_FUNCTION, g as getServerFnById } from "./server-Cx9svbWa.mjs";
 import { L as LayoutDashboard, U as Users, P as Package, S as ShoppingBag, C as CalendarClock, a as UserPlus, b as LogOut, c as Sun, M as Moon } from "../_libs/lucide-react.mjs";
 import { o as objectType, s as stringType, l as literalType } from "../_libs/zod.mjs";
 import "../_libs/tanstack__router-core.mjs";
@@ -330,7 +330,7 @@ function RootComponent() {
     /* @__PURE__ */ jsxRuntimeExports.jsx(Toaster, { richColors: true, position: "top-right" })
   ] }) });
 }
-const $$splitComponentImporter$6 = () => import("./vendas-D18A1YAY.mjs");
+const $$splitComponentImporter$6 = () => import("./vendas-COh-A9qY.mjs");
 const Route$6 = createFileRoute("/vendas")({
   component: lazyRouteComponent($$splitComponentImporter$6, "component")
 });
@@ -346,7 +346,7 @@ var createSsrRpc = (functionId) => {
     [TSS_SERVER_FUNCTION]: true
   });
 };
-const $$splitComponentImporter$5 = () => import("./usuarios-vmPcXffu.mjs");
+const $$splitComponentImporter$5 = () => import("./usuarios-CUl7WJWA.mjs");
 const listUsersFn = createServerFn({
   method: "GET"
 }).handler(createSsrRpc("71433e0925a862d3dd2f5b0ed01ccd423acd1ec05ae2f5e860f0f136a008906a"));
@@ -362,11 +362,11 @@ const deleteUserFn = createServerFn({
 const Route$5 = createFileRoute("/usuarios")({
   component: lazyRouteComponent($$splitComponentImporter$5, "component")
 });
-const $$splitComponentImporter$4 = () => import("./produtos-BaOkWkCV.mjs");
+const $$splitComponentImporter$4 = () => import("./produtos-G4HCvpWH.mjs");
 const Route$4 = createFileRoute("/produtos")({
   component: lazyRouteComponent($$splitComponentImporter$4, "component")
 });
-const $$splitComponentImporter$3 = () => import("./login-D6N9kiK9.mjs");
+const $$splitComponentImporter$3 = () => import("./login-o2iEu6ul.mjs");
 const loginFn = createServerFn({
   method: "POST"
 }).validator((d) => d).handler(createSsrRpc("1b16c41c2f4ec5be0b02b54ca085c9661bc4a8cd2eb184e33412ec8df53c6714"));
@@ -379,11 +379,11 @@ const setFirstPasswordFn = createServerFn({
 const Route$3 = createFileRoute("/login")({
   component: lazyRouteComponent($$splitComponentImporter$3, "component")
 });
-const $$splitComponentImporter$2 = () => import("./contas-a-pagar-BqBWKn7s.mjs");
+const $$splitComponentImporter$2 = () => import("./contas-a-pagar-DuSZuBb4.mjs");
 const Route$2 = createFileRoute("/contas-a-pagar")({
   component: lazyRouteComponent($$splitComponentImporter$2, "component")
 });
-const $$splitComponentImporter$1 = () => import("./clientes-DqhMQNyE.mjs");
+const $$splitComponentImporter$1 = () => import("./clientes-CSd_nxL3.mjs");
 const Route$1 = createFileRoute("/clientes")({
   component: lazyRouteComponent($$splitComponentImporter$1, "component")
 });
@@ -398,7 +398,7 @@ objectType({
   bairro: stringType().trim().max(120).optional().or(literalType("")),
   cidade: stringType().trim().max(120).optional().or(literalType(""))
 });
-const $$splitComponentImporter = () => import("./index-2_TSQUsE.mjs");
+const $$splitComponentImporter = () => import("./index-Cb4vwlbk.mjs");
 const Route = createFileRoute("/")({
   component: lazyRouteComponent($$splitComponentImporter, "component")
 });
