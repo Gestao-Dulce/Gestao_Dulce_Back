@@ -246,14 +246,14 @@ function VendasPage() {
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={imprimirRelatorio}><Printer className="size-4 mr-1" /> Relatório</Button>
-          <Button onClick={() => { setEditId(null); setOpen(true); }}><Plus className="size-4 mr-1" /> Nova venda</Button>
+          <Button id="tour-vendas-add" onClick={() => { setEditId(null); setOpen(true); }}><Plus className="size-4 mr-1" /> Nova venda</Button>
         </div>
       </div>
 
       <Card>
         <CardHeader>
           <div className="flex flex-wrap gap-2 items-center">
-            <Input placeholder="Buscar cliente, NF, produto..." value={busca} onChange={(e) => setBusca(e.target.value)} className="max-w-sm" />
+            <Input id="tour-vendas-search" placeholder="Buscar cliente, NF, produto..." value={busca} onChange={(e) => setBusca(e.target.value)} className="max-w-sm" />
             <Select value={filtroStatus} onValueChange={setFiltroStatus}>
               <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -269,7 +269,7 @@ function VendasPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
+          <Table id="tour-vendas-table">
             <TableHeader>
               <TableRow>
                 <TableHead className="cursor-pointer" onClick={() => sortBy("data")}>Data{arrow("data")}</TableHead>

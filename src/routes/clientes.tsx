@@ -189,7 +189,7 @@ function ClientesPage() {
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={gerarRelatorio}><Printer className="size-4 mr-1" /> Relatório</Button>
-          <Button onClick={openNew}><Plus className="size-4 mr-1" /> Novo cliente</Button>
+          <Button id="tour-clientes-add" onClick={openNew}><Plus className="size-4 mr-1" /> Novo cliente</Button>
         </div>
       </div>
 
@@ -198,7 +198,7 @@ function ClientesPage() {
           <div className="flex flex-wrap gap-2 items-center">
             <div className="relative max-w-sm flex-1">
               <Search className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar por nome ou documento..." className="pl-9" />
+              <Input id="tour-clientes-search" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar por nome ou documento..." className="pl-9" />
             </div>
             <Select value={filtroStatus} onValueChange={setFiltroStatus}>
               <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
@@ -212,7 +212,7 @@ function ClientesPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
+          <Table id="tour-clientes-table">
             <TableHeader>
               <TableRow>
                 <TableHead className="cursor-pointer" onClick={() => sortBy("nome")}>Nome{arrow("nome")}</TableHead>

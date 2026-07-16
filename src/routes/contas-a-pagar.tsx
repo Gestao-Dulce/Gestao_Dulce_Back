@@ -300,7 +300,7 @@ function ContasPage() {
         </div>
         <div className="flex gap-2 items-center">
           <Button variant="outline" onClick={gerarRelatorio}><Printer className="size-4 mr-1" /> Relatório</Button>
-          <Button onClick={abrirNovo}><Plus className="size-4 mr-1" /> Nova conta</Button>
+          <Button id="tour-contas-add" onClick={abrirNovo}><Plus className="size-4 mr-1" /> Nova conta</Button>
         </div>
       </div>
 
@@ -446,7 +446,7 @@ function ContasPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
+          <Table id="tour-contas-table">
             <TableHeader>
               <TableRow>
                 <TableHead className="cursor-pointer" onClick={() => sortBy("fornecedor")}>Fornecedor / Funcionário{arrow("fornecedor")}</TableHead>

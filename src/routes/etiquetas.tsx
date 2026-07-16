@@ -154,7 +154,7 @@ function ShippingLabelsScreen() {
               </div>
 
               {/* Opções de Documento */}
-              <div className="flex flex-col justify-end space-y-3 pb-1">
+              <div id="tour-etiquetas-docs" className="flex flex-col justify-end space-y-3 pb-1">
                 <span className="text-sm font-medium">Documentos para Gerar:</span>
                 <div className="flex items-center gap-6">
                   <div className="flex items-center space-x-2">
@@ -193,7 +193,7 @@ function ShippingLabelsScreen() {
             )}
 
             <div className="flex justify-end pt-2">
-              <Button onClick={handlePrint} disabled={!selectedVendaId} className="gap-2">
+              <Button id="tour-etiquetas-print" onClick={handlePrint} disabled={!selectedVendaId} className="gap-2">
                 <Printer className="size-4" />
                 Imprimir Documentos
               </Button>

@@ -96,7 +96,7 @@ function ProdutosPage() {
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={imprimirRelatorio}><Printer className="size-4 mr-1" /> Relatório</Button>
-          <Button onClick={() => { setEditing(null); setOpen(true); }}>
+          <Button id="tour-produtos-add" onClick={() => { setEditing(null); setOpen(true); }}>
             <Plus className="size-4 mr-1" /> Novo produto
           </Button>
         </div>
@@ -107,7 +107,7 @@ function ProdutosPage() {
           <Input placeholder="Buscar produto..." value={busca} onChange={(e) => setBusca(e.target.value)} className="max-w-sm" />
         </CardHeader>
         <CardContent>
-          <Table>
+          <Table id="tour-produtos-table">
             <TableHeader>
               <TableRow>
                 <TableHead>Nome</TableHead>

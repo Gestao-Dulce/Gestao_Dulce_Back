@@ -195,7 +195,7 @@ function UserManagementPage() {
 
       <div className="grid gap-6 md:grid-cols-3">
         {/* Formulário de cadastro */}
-        <Card className="md:col-span-1 h-fit">
+        <Card id="tour-usuarios-add" className="md:col-span-1 h-fit">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <UserPlus className="size-5 text-primary" />
@@ -295,7 +295,7 @@ function UserManagementPage() {
               </div>
             ) : (
               <div className="border rounded-md overflow-hidden">
-                <Table>
+                <Table id="tour-usuarios-table">
                   <TableHeader>
                     <TableRow>
                       <TableHead>Login</TableHead>
