@@ -1,15 +1,14 @@
 /**
  * postbuild.mjs
  *
- * Rewrites bare `import { ... } from "tslib"` statements in all
- * _libs/*.mjs files inside the Vercel serverless function directory,
+ * Recursively scans the Vercel serverless function directory (.vercel/output/functions/__server.func)
+ * and rewrites any `tslib` import statements (including bare `import "tslib"`) in all JS/MJS files,
  * replacing them with the actual tslib helper implementations.
- * This avoids any runtime module-not-found errors on Vercel.
  */
-import { readFileSync, writeFileSync, readdirSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { resolve, join } from "node:path";
 
-// ─── Inline implementations of every tslib helper that supabase uses ──────────
+// ─── Inline implementations of tslib helpers ─────────────────────────────────
 const TSLIB_HELPERS = `
 // tslib helpers (inlined by postbuild.mjs)
 function __rest(s, e) {
@@ -49,7 +48,7 @@ function __generator(thisArg, body) {
           if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
           if (t && _.label < t[2]) { _.label = t[2]; _.trys.pop(); continue; }
           else if (t) { _.trys.pop(); t = op; break; }
-          if (!(t = _.ops, t = t.length > 0 && t.pop())) { g.done = true; return t; }
+          if (!(t = _.trys, t = t.length > 0 && t.pop())) { g.done = true; return t; }
           _.ops.push(op); break;
       }
       op = body.call(thisArg, _);
@@ -96,7 +95,6 @@ function __metadata(metadataKey, metadataValue) {
 }
 `;
 
-// ─── Process all _libs/*.mjs files ────────────────────────────────────────────
 const funcDir = resolve(".vercel/output/functions/__server.func");
 
 if (!existsSync(funcDir)) {
@@ -104,30 +102,40 @@ if (!existsSync(funcDir)) {
   process.exit(0);
 }
 
-const libsDir = join(funcDir, "_libs");
-if (!existsSync(libsDir)) {
-  console.log("[postbuild] _libs dir not found, skipping.");
-  process.exit(0);
-}
+// Matches:
+// 1. import { ... } from "tslib";
+// 2. import * as ... from "tslib";
+// 3. import "tslib";
+const TSLIB_IMPORT_RE = /import\s+(?:(?:\{[^}]+\}|\*\s*as\s+\w+)\s+from\s+)?["']tslib["'];?/g;
 
-const files = readdirSync(libsDir).filter(f => f.endsWith(".mjs"));
 let patchedCount = 0;
 
-// Regex to match the import line: import { ...helpers... } from "tslib"
-const TSLIB_IMPORT_RE = /^import\s*\{[^}]+\}\s*from\s*["']tslib["'];?\s*$/m;
+function scanDirectory(dir) {
+  const entries = readdirSync(dir);
+  for (const entry of entries) {
+    const fullPath = join(dir, entry);
+    const stat = statSync(fullPath);
 
-for (const file of files) {
-  const filePath = join(libsDir, file);
-  const content = readFileSync(filePath, "utf8");
+    if (stat.isDirectory()) {
+      // Avoid scanning node_modules if it exists
+      if (entry !== "node_modules") {
+        scanDirectory(fullPath);
+      }
+    } else if (stat.isFile() && (entry.endsWith(".mjs") || entry.endsWith(".js"))) {
+      const content = readFileSync(fullPath, "utf8");
 
-  if (!TSLIB_IMPORT_RE.test(content)) continue;
-
-  // Replace the import with inline definitions
-  const patched = content.replace(TSLIB_IMPORT_RE, TSLIB_HELPERS.trim());
-  writeFileSync(filePath, patched, "utf8");
-  console.log(`[postbuild] Inlined tslib helpers into ${file}`);
-  patchedCount++;
+      if (TSLIB_IMPORT_RE.test(content)) {
+        const patched = content.replace(TSLIB_IMPORT_RE, TSLIB_HELPERS.trim());
+        writeFileSync(fullPath, patched, "utf8");
+        console.log(`[postbuild] Inlined tslib helpers into relative path: ${fullPath.replace(funcDir, "")}`);
+        patchedCount++;
+      }
+    }
+  }
 }
+
+console.log("[postbuild] Scanning function files recursively for tslib imports...");
+scanDirectory(funcDir);
 
 if (patchedCount === 0) {
   console.log("[postbuild] No files needed patching.");

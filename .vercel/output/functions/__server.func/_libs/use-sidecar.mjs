@@ -37,7 +37,7 @@ function __generator(thisArg, body) {
           if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
           if (t && _.label < t[2]) { _.label = t[2]; _.trys.pop(); continue; }
           else if (t) { _.trys.pop(); t = op; break; }
-          if (!(t = _.ops, t = t.length > 0 && t.pop())) { g.done = true; return t; }
+          if (!(t = _.trys, t = t.length > 0 && t.pop())) { g.done = true; return t; }
           _.ops.push(op); break;
       }
       op = body.call(thisArg, _);
