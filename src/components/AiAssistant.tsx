@@ -4,8 +4,99 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { apiAI, ChatMessage } from "@/lib/api";
 import { toast } from "sonner";
+import { createServerFn } from "@tanstack/react-start";
+
+export type ChatMessage = {
+  role: "user" | "assistant";
+  content: string;
+};
+
+// ─── Server Function: Processar chat com Gemini e dados do Supabase ──────────
+export const aiChatFn = createServerFn({ method: "POST" })
+  .validator((d: { message: string; history: ChatMessage[] }) => d)
+  .handler(async ({ data: { message, history } }) => {
+    // Importa o cliente administrativo do Supabase no lado do servidor
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Executa as buscas de dados em paralelo no servidor
+    const [clientesRes, produtosRes, vendasRes, contasRes] = await Promise.all([
+      supabaseAdmin.from("clientes").select("nome, cpf_cnpj, contato, cidade, bairro"),
+      supabaseAdmin.from("produtos").select("nome, unidade, valor, observacao"),
+      supabaseAdmin.from("vendas").select("data, valor_total, status_pagamento, forma_pagamento, nota_fiscal, clientes(nome), venda_itens(produto, quantidade, valor_unitario, unidade)"),
+      supabaseAdmin.from("contas_a_pagar").select("fornecedor, categoria, descricao, vencimento, valor, status, recorrente")
+    ]);
+
+    const dataAtual = new Date().toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+
+    const contextPrompt = `
+Você é o assistente inteligente da fábrica de doces **Doces Lucelian (Lucelian Sweet Flow)**.
+Sua missão é ajudar o administrador respondendo perguntas de forma concisa, educada e direta baseando-se estritamente nos dados reais fornecidos abaixo.
+Utilize formatação Markdown para deixar as respostas organizadas (listas, negritos e tabelas curtas são recomendados).
+
+---
+### DADOS REAIS DO SISTEMA (Atualizados em: ${dataAtual})
+
+#### Clientes Cadastrados:
+${JSON.stringify(clientesRes.data ?? [])}
+
+#### Produtos Cadastrados:
+${JSON.stringify(produtosRes.data ?? [])}
+
+#### Histórico de Vendas Realizadas:
+${JSON.stringify(vendasRes.data ?? [])}
+
+#### Contas a Pagar (Despesas/Compromissos):
+${JSON.stringify(contasRes.data ?? [])}
+---
+
+### REGRAS E DIRETRIZES:
+1. Responda em Português do Brasil (pt-BR).
+2. Se a informação solicitada não puder ser deduzida dos dados fornecidos, responda educadamente que não possui essa informação em sua base de dados atual.
+3. Se perguntarem sobre usuários do sistema, logins, senhas ou credenciais, diga que por motivos de segurança você não tem acesso a essas informações de contas.
+4. Mantenha os cálculos corretos. Se pedirem somas ou faturamentos, calcule com base nos valores numéricos dos dados fornecidos.
+`;
+
+    const geminiKey = process.env.GEMINI_API_KEY;
+    if (!geminiKey) {
+      throw new Error("Chave da API do Gemini (GEMINI_API_KEY) não configurada no servidor.");
+    }
+
+    const contents = [];
+    if (Array.isArray(history)) {
+      for (const msg of history) {
+        contents.push({
+          role: msg.role === "user" ? "user" : "model",
+          parts: [{ text: msg.content }],
+        });
+      }
+    }
+
+    contents.push({
+      role: "user",
+      parts: [{ text: `${contextPrompt}\n\nPergunta do usuário: ${message}` }],
+    });
+
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
+    const response = await fetch(geminiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ contents }),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`Erro na API do Gemini: ${errText}`);
+    }
+
+    const resJson = await response.json() as any;
+    const aiText = resJson?.candidates?.[0]?.content?.parts?.[0]?.text || "Desculpe, não consegui processar a resposta.";
+    return { text: aiText };
+  });
 
 export function AiAssistant() {
   const [open, setOpen] = useState(false);
@@ -97,13 +188,12 @@ export function AiAssistant() {
     setLoading(true);
 
     try {
-      // Send message to Express backend API
-      const res = await apiAI.chat(userMessage, messages);
+      // Chama a Server Function nativa do TanStack Start
+      const res = await aiChatFn({ message: userMessage, history: messages });
       setMessages((prev) => [...prev, { role: "assistant", content: res.text }]);
     } catch (err: any) {
       console.error(err);
       toast.error(err.message || "Erro ao obter resposta do assistente.");
-      // Remove user's last message if failed, or just show error
     } finally {
       setLoading(false);
     }
