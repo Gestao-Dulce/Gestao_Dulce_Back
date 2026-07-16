@@ -81,7 +81,38 @@ ${JSON.stringify(contasRes.data ?? [])}
       parts: [{ text: `${contextPrompt}\n\nPergunta do usuário: ${message}` }],
     });
 
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
+    let modelName = "gemini-1.5-flash"; // Fallback padrão
+
+    try {
+      // Lista os modelos disponíveis para esta chave de API específica do usuário
+      const listModelsUrl = `https://generativelanguage.googleapis.com/v1/models?key=${geminiKey}`;
+      const listRes = await fetch(listModelsUrl);
+      if (listRes.ok) {
+        const listData = await listRes.json() as any;
+        const models = listData.models || [];
+        const modelNames = models.map((m: any) => m.name || "");
+        
+        // Lista ordenada de prioridades de modelos estáveis
+        const targetModels = [
+          "models/gemini-1.5-flash",
+          "models/gemini-1.5-flash-latest",
+          "models/gemini-2.5-flash",
+          "models/gemini-1.5-pro",
+          "models/gemini-pro"
+        ];
+        
+        const foundModel = targetModels.find(target => modelNames.includes(target)) || 
+                           modelNames.find((name: string) => name.includes("gemini"));
+                           
+        if (foundModel) {
+          modelName = foundModel.replace("models/", "");
+        }
+      }
+    } catch (e) {
+      console.warn("Erro ao listar modelos disponíveis do Gemini:", e);
+    }
+
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1/models/${modelName}:generateContent?key=${geminiKey}`;
     const response = await fetch(geminiUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
