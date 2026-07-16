@@ -554,7 +554,7 @@ function VendaDialog({ open, onClose, clientes, produtosUsados, produtosCadastra
             <CardContent className="space-y-2">
               {itens.length === 0 && <div className="text-sm text-muted-foreground py-2">Nenhum item.</div>}
               {itens.length > 0 && (
-                <div className="grid grid-cols-[1fr_90px_110px_120px_40px_40px] gap-2 text-xs uppercase tracking-wide text-muted-foreground px-1">
+                <div className="hidden md:grid grid-cols-[1fr_90px_110px_120px_40px_40px] gap-2 text-xs uppercase tracking-wide text-muted-foreground px-1">
                   <div>Produtos</div>
                   <div>Quantidade</div>
                   <div>Unidade</div>
@@ -564,32 +564,73 @@ function VendaDialog({ open, onClose, clientes, produtosUsados, produtosCadastra
                 </div>
               )}
               {itens.map((i) => (
-                <div key={i.id} className="grid grid-cols-[1fr_90px_110px_120px_40px_40px] gap-2 items-center">
-                  <Select value={i.produto} onValueChange={(v) => aplicarProdutoCadastrado(i.id, v)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o produto" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {produtosCadastrados.map((p: any) => (
-                        <SelectItem key={p.id} value={p.nome}>
-                          {p.nome} ({cap(p.unidade)})
-                        </SelectItem>
-                      ))}
-                      {i.produto && !produtosCadastrados.some((p: any) => p.nome === i.produto) && (
-                        <SelectItem value={i.produto}>{i.produto}</SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <Input type="number" step="0.01" min="0" placeholder="Qtd" value={i.quantidade} onChange={(e) => updItem(i.id, { quantidade: Number(e.target.value) })} />
-                  <Select value={i.unidade} onValueChange={(v) => updItem(i.id, { unidade: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {UNIDADES.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                  <CurrencyInput value={i.valor_unitario} onValueChange={(n) => updItem(i.id, { valor_unitario: n })} />
-                  <Button size="icon" variant="ghost" title="Cadastrar novo produto" onClick={() => abrirNovoProduto(i.id)}><PackagePlus className="size-4" /></Button>
-                  <Button size="icon" variant="ghost" onClick={() => delItem(i.id)}><Trash2 className="size-4" /></Button>
+                <div key={i.id} className="flex flex-col gap-2 p-3 border rounded-lg md:grid md:grid-cols-[1fr_90px_110px_120px_40px_40px] md:gap-2 md:items-center md:p-0 md:border-0">
+                  {/* Select on product: always present */}
+                  <div className="flex-1 min-w-0">
+                    <Label className="text-[10px] uppercase text-muted-foreground md:hidden mb-1 block">Produto</Label>
+                    <Select value={i.produto} onValueChange={(v) => aplicarProdutoCadastrado(i.id, v)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o produto" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {produtosCadastrados.map((p: any) => (
+                          <SelectItem key={p.id} value={p.nome}>
+                            {p.nome} ({cap(p.unidade)})
+                          </SelectItem>
+                        ))}
+                        {i.produto && !produtosCadastrados.some((p: any) => p.nome === i.produto) && (
+                          <SelectItem value={i.produto}>{i.produto}</SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {/* Desktop elements - hidden on mobile */}
+                  <div className="hidden md:block">
+                    <Input type="number" step="0.01" min="0" placeholder="Qtd" value={i.quantidade} onChange={(e) => updItem(i.id, { quantidade: Number(e.target.value) })} />
+                  </div>
+                  <div className="hidden md:block">
+                    <Select value={i.unidade} onValueChange={(v) => updItem(i.id, { unidade: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {UNIDADES.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="hidden md:block">
+                    <CurrencyInput value={i.valor_unitario} onValueChange={(n) => updItem(i.id, { valor_unitario: n })} />
+                  </div>
+                  <div className="hidden md:flex justify-center">
+                    <Button size="icon" variant="ghost" title="Cadastrar novo produto" onClick={() => abrirNovoProduto(i.id)}><PackagePlus className="size-4" /></Button>
+                  </div>
+                  <div className="hidden md:flex justify-center">
+                    <Button size="icon" variant="ghost" onClick={() => delItem(i.id)}><Trash2 className="size-4" /></Button>
+                  </div>
+
+                  {/* Mobile inputs - hidden on desktop */}
+                  <div className="grid grid-cols-2 gap-2 md:hidden pt-1 border-t border-dashed border-border mt-1">
+                    <div className="space-y-1">
+                      <Label className="text-[10px] uppercase text-muted-foreground">Qtd</Label>
+                      <Input type="number" step="0.01" min="0" placeholder="Qtd" value={i.quantidade} onChange={(e) => updItem(i.id, { quantidade: Number(e.target.value) })} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[10px] uppercase text-muted-foreground">Unidade</Label>
+                      <Select value={i.unidade} onValueChange={(v) => updItem(i.id, { unidade: v })}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {UNIDADES.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[10px] uppercase text-muted-foreground">Valor unit.</Label>
+                      <CurrencyInput value={i.valor_unitario} onValueChange={(n) => updItem(i.id, { valor_unitario: n })} />
+                    </div>
+                    <div className="flex items-end justify-end gap-1 pb-1">
+                      <Button type="button" variant="outline" size="sm" className="h-9 px-2 text-xs" title="Cadastrar produto" onClick={() => abrirNovoProduto(i.id)}><PackagePlus className="size-3.5 mr-1" /> Novo</Button>
+                      <Button type="button" variant="destructive" size="icon" className="size-9" onClick={() => delItem(i.id)}><Trash2 className="size-3.5" /></Button>
+                    </div>
+                  </div>
                 </div>
               ))}
             </CardContent>
