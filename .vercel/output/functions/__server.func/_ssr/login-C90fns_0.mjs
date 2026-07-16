@@ -1,5 +1,5 @@
-import { c as createServerRpc } from "./createServerRpc-Cktco27D.mjs";
-import { c as createServerFn } from "./server-Cx9svbWa.mjs";
+import { c as createServerRpc } from "./createServerRpc-BE2XimVk.mjs";
+import { c as createServerFn } from "./server-CdGkcVaG.mjs";
 import bcryptjs from "../_libs/bcryptjs.mjs";
 import "../_libs/seroval.mjs";
 import "../_libs/react.mjs";
@@ -32,7 +32,7 @@ const loginFn = createServerFn({
 }) => {
   const {
     supabaseAdmin
-  } = await import("./client.server-6p3ypXLR.mjs");
+  } = await import("./client.server-D5ro3rAQ.mjs");
   const {
     data: existing
   } = await supabaseAdmin.from("usuarios").select("id").eq("email", "admin").maybeSingle();
@@ -81,7 +81,7 @@ const changePasswordFn = createServerFn({
 }) => {
   const {
     supabaseAdmin
-  } = await import("./client.server-6p3ypXLR.mjs");
+  } = await import("./client.server-D5ro3rAQ.mjs");
   const {
     data: user
   } = await supabaseAdmin.from("usuarios").select("id, senha_hash").eq("email", data.email).maybeSingle();
@@ -116,7 +116,7 @@ const setFirstPasswordFn = createServerFn({
 }) => {
   const {
     supabaseAdmin
-  } = await import("./client.server-6p3ypXLR.mjs");
+  } = await import("./client.server-D5ro3rAQ.mjs");
   const {
     data: user
   } = await supabaseAdmin.from("usuarios").select("id, email, senha_hash").eq("email", data.email).maybeSingle();

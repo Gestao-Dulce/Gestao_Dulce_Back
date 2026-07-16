@@ -1,9 +1,8 @@
-import { a as createMiddleware } from "./server-Cx9svbWa.mjs";
+import { a as createMiddleware } from "./server-CdGkcVaG.mjs";
 import { r as renderErrorPage } from "./index.mjs";
-import { s as supabase } from "./client-BE5Wis3r.mjs";
+import { s as supabase } from "./client-Y2DWLo6B.mjs";
 import "../_libs/seroval.mjs";
 import "../_libs/react.mjs";
-import "../_libs/supabase__realtime-js.mjs";
 import "node:async_hooks";
 import "../_libs/h3-v2.mjs";
 import "../_libs/rou3.mjs";
@@ -21,13 +20,15 @@ import "async_hooks";
 import "stream";
 import "crypto";
 import "../_libs/isbot.mjs";
-import "./index-DoFzyMbP.mjs";
+import "../_libs/supabase__supabase-js.mjs";
 import "../_libs/supabase__postgrest-js.mjs";
+import "../_libs/supabase__realtime-js.mjs";
+import "../_libs/supabase__phoenix.mjs";
 import "../_libs/supabase__storage-js.mjs";
 import "../_libs/iceberg-js.mjs";
-import "../_libs/supabase__functions-js.mjs";
+import "../_libs/supabase__auth-js.mjs";
 import "tslib";
-import "../_libs/supabase__phoenix.mjs";
+import "../_libs/supabase__functions-js.mjs";
 function dedupeSerializationAdapters(deduped, serializationAdapters) {
   for (let i = 0, len = serializationAdapters.length; i < len; i++) {
     const current = serializationAdapters[i];

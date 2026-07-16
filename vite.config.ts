@@ -20,9 +20,5 @@ export default defineConfig({
       publicDir: ".vercel/output/static",
     },
   },
-  vite: {
-    ssr: {
-      noExternal: ["tslib", "@supabase/auth-js", "@supabase/supabase-js"],
-    },
-  },
 });
+
