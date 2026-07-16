@@ -160,7 +160,7 @@ export function AppShell() {
               <Button variant="ghost" size="icon" onClick={toggle} aria-label="Alternar tema" className="size-8 text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground">
                 {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
               </Button>
-              <img src={logoLucelian} alt="Doces Lucelian" className="h-8 w-auto object-contain brightness-0 invert" />
+              <img src={logoLucelian} alt="Doces Lucelian" className="h-8 w-auto object-contain" />
             </div>
           </div>
         </header>
