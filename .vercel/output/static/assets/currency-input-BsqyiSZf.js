@@ -1,0 +1,1 @@
+import{j as s}from"./index-Dlh60Hrl.js";import{I as u}from"./index-Blja0c5l.js";function g({value:n,onValueChange:i,...o}){const r=(Number(n)||0).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2}),e=a=>{const t=a.target.value.replace(/\D/g,""),m=t?Number(t)/100:0;i(m)};return s.jsx(u,{inputMode:"decimal",value:r,onChange:e,...o})}export{g as C};

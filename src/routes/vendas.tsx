@@ -563,13 +563,23 @@ function VendaDialog({ open, onClose, clientes, produtosUsados, produtosCadastra
                   <div></div>
                 </div>
               )}
-              <datalist id="produtos-sugestoes">
-                {produtosCadastrados.map((p: any) => <option key={p.id} value={`${p.nome} (${cap(p.unidade)})`} />)}
-                {produtosUsados.filter((p) => !produtosCadastrados.some((pc: any) => pc.nome === p)).map((p) => <option key={p} value={p} />)}
-              </datalist>
               {itens.map((i) => (
                 <div key={i.id} className="grid grid-cols-[1fr_90px_110px_120px_40px_40px] gap-2 items-center">
-                  <Input list="produtos-sugestoes" placeholder="Produto (digite ou escolha)" value={i.produto} onChange={(e) => aplicarProdutoCadastrado(i.id, e.target.value)} />
+                  <Select value={i.produto} onValueChange={(v) => aplicarProdutoCadastrado(i.id, v)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o produto" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {produtosCadastrados.map((p: any) => (
+                        <SelectItem key={p.id} value={p.nome}>
+                          {p.nome} ({cap(p.unidade)})
+                        </SelectItem>
+                      ))}
+                      {i.produto && !produtosCadastrados.some((p: any) => p.nome === i.produto) && (
+                        <SelectItem value={i.produto}>{i.produto}</SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
                   <Input type="number" step="0.01" min="0" placeholder="Qtd" value={i.quantidade} onChange={(e) => updItem(i.id, { quantidade: Number(e.target.value) })} />
                   <Select value={i.unidade} onValueChange={(v) => updItem(i.id, { unidade: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
