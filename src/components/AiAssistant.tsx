@@ -94,9 +94,24 @@ ${JSON.stringify(contasRes.data ?? [])}
       const listData = await listRes.json() as any;
       const models = listData.models || [];
       const modelNames = models.map((m: any) => m.name || "");
-      throw new Error("Modelos disponíveis na sua chave: " + JSON.stringify(modelNames));
-    } catch (e: any) {
-      throw new Error(e.message || "Erro desconhecido ao tentar obter modelos.");
+      
+      // Lista de prioridades baseada nos modelos disponíveis na chave
+      const targetModels = [
+        "models/gemini-3.5-flash",
+        "models/gemini-2.0-flash",
+        "models/gemini-2.5-pro",
+        "models/gemini-2.5-flash-lite",
+        "models/gemini-2.0-flash-lite"
+      ];
+      
+      const foundModel = targetModels.find(target => modelNames.includes(target)) || 
+                         modelNames.find((name: string) => name.includes("gemini") && !name.includes("embedding"));
+                         
+      if (foundModel) {
+        modelName = foundModel.replace("models/", "");
+      }
+    } catch (e) {
+      console.warn("Erro ao detectar modelo do Gemini, usando fallback:", e);
     }
 
     const geminiUrl = `https://generativelanguage.googleapis.com/v1/models/${modelName}:generateContent?key=${geminiKey}`;
