@@ -91,7 +91,7 @@ export function AppShell() {
         </div>
       </aside>
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="border-b border-border px-4 md:px-10 py-3 md:py-4 flex items-center justify-between bg-card">
+        <header className="border-b border-sidebar-border md:border-border px-4 md:px-10 py-3 md:py-4 flex items-center justify-between bg-sidebar md:bg-card text-sidebar-foreground md:text-foreground">
           {/* Desktop header view */}
           <div className="hidden md:flex items-center justify-between w-full">
             <div>
@@ -119,7 +119,7 @@ export function AppShell() {
             {/* Left side: Menu toggle for sidebar */}
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+                <Button variant="ghost" size="icon" className="text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground">
                   <Menu className="size-5" />
                   <span className="sr-only">Menu de navegação</span>
                 </Button>
@@ -157,10 +157,10 @@ export function AppShell() {
 
             {/* Right side: Icon (Logo) and theme toggle */}
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" onClick={toggle} aria-label="Alternar tema" className="size-8">
+              <Button variant="ghost" size="icon" onClick={toggle} aria-label="Alternar tema" className="size-8 text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground">
                 {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
               </Button>
-              <img src={logoLucelian} alt="Doces Lucelian" className="h-8 w-auto object-contain" />
+              <img src={logoLucelian} alt="Doces Lucelian" className="h-8 w-auto object-contain brightness-0 invert" />
             </div>
           </div>
         </header>
