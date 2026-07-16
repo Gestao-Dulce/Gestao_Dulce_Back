@@ -5,7 +5,17 @@
  * nunca diretamente pelo cliente Supabase no frontend.
  */
 
-const BASE_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? "http://localhost:3001";
+const getApiUrl = (): string => {
+  if (typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL as string;
+  }
+  if (typeof process !== "undefined" && process.env && process.env.VITE_API_URL) {
+    return process.env.VITE_API_URL;
+  }
+  return "http://localhost:3001";
+};
+
+const BASE_URL = getApiUrl();
 
 // --- Helpers ---
 
