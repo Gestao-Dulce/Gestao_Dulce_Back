@@ -189,7 +189,7 @@ export function AiAssistant() {
 
     try {
       // Chama a Server Function nativa do TanStack Start
-      const res = await aiChatFn({ message: userMessage, history: messages });
+      const res = await aiChatFn({ data: { message: userMessage, history: messages } });
       setMessages((prev) => [...prev, { role: "assistant", content: res.text }]);
     } catch (err: any) {
       console.error(err);
