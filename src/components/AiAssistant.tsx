@@ -87,14 +87,16 @@ ${JSON.stringify(contasRes.data ?? [])}
       // Lista os modelos disponíveis para esta chave de API específica do usuário
       const listModelsUrl = `https://generativelanguage.googleapis.com/v1/models?key=${geminiKey}`;
       const listRes = await fetch(listModelsUrl);
-      if (listRes.ok) {
-        const listData = await listRes.json() as any;
-        const models = listData.models || [];
-        const modelNames = models.map((m: any) => m.name || "");
-        throw new Error("Modelos disponíveis na sua chave: " + JSON.stringify(modelNames));
+      if (!listRes.ok) {
+        const errText = await listRes.text();
+        throw new Error("Erro ao listar modelos do Gemini: " + errText);
       }
-    } catch (e) {
-      console.warn("Erro ao listar modelos disponíveis do Gemini:", e);
+      const listData = await listRes.json() as any;
+      const models = listData.models || [];
+      const modelNames = models.map((m: any) => m.name || "");
+      throw new Error("Modelos disponíveis na sua chave: " + JSON.stringify(modelNames));
+    } catch (e: any) {
+      throw new Error(e.message || "Erro desconhecido ao tentar obter modelos.");
     }
 
     const geminiUrl = `https://generativelanguage.googleapis.com/v1/models/${modelName}:generateContent?key=${geminiKey}`;
