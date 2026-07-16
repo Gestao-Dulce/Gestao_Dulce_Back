@@ -8,6 +8,7 @@ import produtosRoutes from "./routes/produtos.routes.js";
 import contasRoutes from "./routes/contas.routes.js";
 import usuariosRoutes from "./routes/usuarios.routes.js";
 import dashboardRoutes from "./routes/dashboard.routes.js";
+import aiRoutes from "./routes/ai.routes.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
@@ -49,6 +50,7 @@ app.use("/api/produtos", produtosRoutes);
 app.use("/api/contas", contasRoutes);
 app.use("/api/usuarios", usuariosRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/ai", aiRoutes);
 
 // ─── Error handler global ───────────────────────────────────────────────────
 

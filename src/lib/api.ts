@@ -259,3 +259,15 @@ export const apiUsuarios = {
   resetPassword: (id: string) =>
     patch<{ success: boolean }>(`/api/usuarios/${id}/reset-password`),
 };
+
+// --- AI Chat ---
+
+export type ChatMessage = {
+  role: "user" | "assistant";
+  content: string;
+};
+
+export const apiAI = {
+  chat: (message: string, history: ChatMessage[]) =>
+    post<{ text: string }>("/api/ai/chat", { message, history }),
+};

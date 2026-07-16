@@ -13,6 +13,7 @@ import {
 import { AppShell } from "@/components/AppShell";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
+import { AiAssistant } from "@/components/AiAssistant";
 
 import appCss from "../styles.css?url";
 
@@ -185,6 +186,7 @@ function RootComponent() {
       <ThemeProvider>
         {isLoginPage ? <Outlet /> : <AppShell />}
         <Toaster richColors position="top-right" />
+        {!isLoginPage && <AiAssistant />}
       </ThemeProvider>
     </QueryClientProvider>
   );
