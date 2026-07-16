@@ -81,7 +81,7 @@ ${JSON.stringify(contasRes.data ?? [])}
       parts: [{ text: `${contextPrompt}\n\nPergunta do usuário: ${message}` }],
     });
 
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
     const response = await fetch(geminiUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

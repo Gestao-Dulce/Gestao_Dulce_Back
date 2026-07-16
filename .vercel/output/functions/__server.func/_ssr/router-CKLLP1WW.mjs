@@ -8,7 +8,7 @@ import { S as Slot } from "../_libs/radix-ui__react-slot.mjs";
 import { c as cva } from "../_libs/class-variance-authority.mjs";
 import { D as Dialog, a as DialogTrigger, b as DialogPortal, d as DialogContent, g as DialogClose, e as DialogTitle, h as DialogOverlay, f as DialogDescription } from "../_libs/radix-ui__react-dialog.mjs";
 import { T as Toaster$1, t as toast } from "../_libs/sonner.mjs";
-import { c as createServerFn, T as TSS_SERVER_FUNCTION, g as getServerFnById } from "./server-lmuRSYvC.mjs";
+import { c as createServerFn, T as TSS_SERVER_FUNCTION, g as getServerFnById } from "./server-x9rkVVWt.mjs";
 import { L as LogOut, S as Sun, M as Moon, a as Menu, B as Bot, X, U as User, b as LoaderCircle, c as MicOff, d as Mic, e as Send, f as MessageSquare, g as LayoutDashboard, h as Users, P as Package, i as ShoppingBag, C as CalendarClock, j as UserPlus } from "../_libs/lucide-react.mjs";
 import { o as objectType, s as stringType, l as literalType } from "../_libs/zod.mjs";
 import "../_libs/tanstack__router-core.mjs";
@@ -742,11 +742,11 @@ function RootComponent() {
     !isLoginPage && /* @__PURE__ */ jsxRuntimeExports.jsx(AiAssistant, {})
   ] }) });
 }
-const $$splitComponentImporter$6 = () => import("./vendas-DrmvvCEe.mjs");
+const $$splitComponentImporter$6 = () => import("./vendas-CsRKwXMz.mjs");
 const Route$6 = createFileRoute("/vendas")({
   component: lazyRouteComponent($$splitComponentImporter$6, "component")
 });
-const $$splitComponentImporter$5 = () => import("./usuarios-BEfSHVZ1.mjs");
+const $$splitComponentImporter$5 = () => import("./usuarios-C6RgtZVx.mjs");
 const listUsersFn = createServerFn({
   method: "GET"
 }).handler(createSsrRpc("71433e0925a862d3dd2f5b0ed01ccd423acd1ec05ae2f5e860f0f136a008906a"));
@@ -762,11 +762,11 @@ const deleteUserFn = createServerFn({
 const Route$5 = createFileRoute("/usuarios")({
   component: lazyRouteComponent($$splitComponentImporter$5, "component")
 });
-const $$splitComponentImporter$4 = () => import("./produtos-Zz6P7Jb8.mjs");
+const $$splitComponentImporter$4 = () => import("./produtos-6D3O9BB-.mjs");
 const Route$4 = createFileRoute("/produtos")({
   component: lazyRouteComponent($$splitComponentImporter$4, "component")
 });
-const $$splitComponentImporter$3 = () => import("./login-_SbK4Krh.mjs");
+const $$splitComponentImporter$3 = () => import("./login-B23JDpW8.mjs");
 const loginFn = createServerFn({
   method: "POST"
 }).validator((d) => d).handler(createSsrRpc("1b16c41c2f4ec5be0b02b54ca085c9661bc4a8cd2eb184e33412ec8df53c6714"));
@@ -779,11 +779,11 @@ const setFirstPasswordFn = createServerFn({
 const Route$3 = createFileRoute("/login")({
   component: lazyRouteComponent($$splitComponentImporter$3, "component")
 });
-const $$splitComponentImporter$2 = () => import("./contas-a-pagar-B0cF2O4F.mjs");
+const $$splitComponentImporter$2 = () => import("./contas-a-pagar-DiXZUNJj.mjs");
 const Route$2 = createFileRoute("/contas-a-pagar")({
   component: lazyRouteComponent($$splitComponentImporter$2, "component")
 });
-const $$splitComponentImporter$1 = () => import("./clientes-B-ME-zyV.mjs");
+const $$splitComponentImporter$1 = () => import("./clientes-CAtal2mg.mjs");
 const Route$1 = createFileRoute("/clientes")({
   component: lazyRouteComponent($$splitComponentImporter$1, "component")
 });
@@ -798,7 +798,7 @@ objectType({
   bairro: stringType().trim().max(120).optional().or(literalType("")),
   cidade: stringType().trim().max(120).optional().or(literalType(""))
 });
-const $$splitComponentImporter = () => import("./index-B8MXPC3d.mjs");
+const $$splitComponentImporter = () => import("./index-BuoaaBaS.mjs");
 const Route = createFileRoute("/")({
   component: lazyRouteComponent($$splitComponentImporter, "component")
 });
