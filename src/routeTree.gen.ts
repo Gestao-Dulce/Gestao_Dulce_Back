@@ -13,6 +13,7 @@ import { Route as VendasRouteImport } from './routes/vendas'
 import { Route as UsuariosRouteImport } from './routes/usuarios'
 import { Route as ProdutosRouteImport } from './routes/produtos'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as EtiquetasRouteImport } from './routes/etiquetas'
 import { Route as ContasAPagarRouteImport } from './routes/contas-a-pagar'
 import { Route as ClientesRouteImport } from './routes/clientes'
 import { Route as IndexRouteImport } from './routes/index'
@@ -37,6 +38,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EtiquetasRoute = EtiquetasRouteImport.update({
+  id: '/etiquetas',
+  path: '/etiquetas',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ContasAPagarRoute = ContasAPagarRouteImport.update({
   id: '/contas-a-pagar',
   path: '/contas-a-pagar',
@@ -57,6 +63,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/clientes': typeof ClientesRoute
   '/contas-a-pagar': typeof ContasAPagarRoute
+  '/etiquetas': typeof EtiquetasRoute
   '/login': typeof LoginRoute
   '/produtos': typeof ProdutosRoute
   '/usuarios': typeof UsuariosRoute
@@ -66,6 +73,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/clientes': typeof ClientesRoute
   '/contas-a-pagar': typeof ContasAPagarRoute
+  '/etiquetas': typeof EtiquetasRoute
   '/login': typeof LoginRoute
   '/produtos': typeof ProdutosRoute
   '/usuarios': typeof UsuariosRoute
@@ -76,6 +84,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/clientes': typeof ClientesRoute
   '/contas-a-pagar': typeof ContasAPagarRoute
+  '/etiquetas': typeof EtiquetasRoute
   '/login': typeof LoginRoute
   '/produtos': typeof ProdutosRoute
   '/usuarios': typeof UsuariosRoute
@@ -87,6 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/clientes'
     | '/contas-a-pagar'
+    | '/etiquetas'
     | '/login'
     | '/produtos'
     | '/usuarios'
@@ -96,6 +106,7 @@ export interface FileRouteTypes {
     | '/'
     | '/clientes'
     | '/contas-a-pagar'
+    | '/etiquetas'
     | '/login'
     | '/produtos'
     | '/usuarios'
@@ -105,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/clientes'
     | '/contas-a-pagar'
+    | '/etiquetas'
     | '/login'
     | '/produtos'
     | '/usuarios'
@@ -115,6 +127,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ClientesRoute: typeof ClientesRoute
   ContasAPagarRoute: typeof ContasAPagarRoute
+  EtiquetasRoute: typeof EtiquetasRoute
   LoginRoute: typeof LoginRoute
   ProdutosRoute: typeof ProdutosRoute
   UsuariosRoute: typeof UsuariosRoute
@@ -151,6 +164,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/etiquetas': {
+      id: '/etiquetas'
+      path: '/etiquetas'
+      fullPath: '/etiquetas'
+      preLoaderRoute: typeof EtiquetasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/contas-a-pagar': {
       id: '/contas-a-pagar'
       path: '/contas-a-pagar'
@@ -179,6 +199,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ClientesRoute: ClientesRoute,
   ContasAPagarRoute: ContasAPagarRoute,
+  EtiquetasRoute: EtiquetasRoute,
   LoginRoute: LoginRoute,
   ProdutosRoute: ProdutosRoute,
   UsuariosRoute: UsuariosRoute,
