@@ -116,7 +116,7 @@ function PrecificacaoPage() {
   const qtd = qtdProduzida > 0 ? qtdProduzida : 1;
   const custoRateado = totalCustosDoMes / qtd;
   const custoTotal = custoInsumos + custoRateado;
-  const precoSugerido = custoTotal * (1 + margem / 100);
+  const precoSugerido = margem >= 100 ? custoTotal : custoTotal / (1 - margem / 100);
   const precoAtual = produtoSelecionado ? Number(produtoSelecionado.valor) : 0;
   const margemAtual = precoAtual > 0 ? ((precoAtual - custoTotal) / precoAtual) * 100 : null;
   const lucroAtual = precoAtual - custoTotal;
@@ -507,13 +507,13 @@ function PrecificacaoPage() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label>Margem de lucro desejada</Label>
+                    <Label>Margem de lucro real</Label>
                     <span className="text-lg font-bold text-primary tabular-nums">{margem}%</span>
                   </div>
                   <input
                     type="range"
                     min={0}
-                    max={200}
+                    max={99}
                     step={1}
                     value={margem}
                     onChange={(e) => setMargem(Number(e.target.value))}
@@ -521,8 +521,8 @@ function PrecificacaoPage() {
                   />
                   <div className="flex justify-between text-xs text-muted-foreground">
                     <span>0%</span>
-                    <span>100%</span>
-                    <span>200%</span>
+                    <span>50%</span>
+                    <span>99%</span>
                   </div>
                 </div>
 
@@ -622,8 +622,8 @@ function PrecificacaoPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {[10, 20, 30, 40, 50, 60, 80, 100].map((m) => {
-                      const p = custoTotal * (1 + m / 100);
+                    {[10, 20, 30, 40, 50, 60, 70, 80, 90].map((m) => {
+                      const p = custoTotal / (1 - m / 100);
                       const l = p - custoTotal;
                       const isAtual = precoAtual > 0 && Math.abs(precoAtual - p) < 0.01;
                       return (
