@@ -190,7 +190,7 @@ function PrecificacaoPage() {
                 <SelectContent>
                   {produtos.map((p) => (
                     <SelectItem key={p.id} value={p.id}>
-                      {p.nome}
+                      {p.nome} ({p.unidade})
                     </SelectItem>
                   ))}
                 </SelectContent>
