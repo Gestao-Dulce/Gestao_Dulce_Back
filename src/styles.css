@@ -1,7 +1,7 @@
+@import url("https://fonts.googleapis.com/css2?family=Pacifico&family=Inter:wght@400;500;600;700;800&display=swap");
+@import "tw-animate-css";
 @import "tailwindcss" source(none);
 @source "../src";
-@import "tw-animate-css";
-@import url("https://fonts.googleapis.com/css2?family=Pacifico&family=Inter:wght@400;500;600;700;800&display=swap");
 
 @theme inline {
   --font-serif: "Pacifico", ui-serif, cursive;
