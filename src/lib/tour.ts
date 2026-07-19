@@ -5,13 +5,20 @@ export function iniciarTutorial() {
   const path = window.location.pathname;
   let steps: any[] = [];
 
+  // Check if global help was already seen
+  const globalHelpSeen = localStorage.getItem("global_help_seen") === "true";
+  
+  // Decide which nav element to use based on screen width
+  const isMobile = window.innerWidth < 768;
+  const navElement = isMobile ? "#tour-mobile-nav" : "#tour-nav";
+
   // 1. Passo inicial comum a todas as telas (Menu de Navegação)
   const stepNav = {
-    element: "#tour-nav",
+    element: navElement,
     popover: {
       title: "Menu de Navegação 🧭",
       description: "Aqui você navega entre as telas do sistema para gerenciar Clientes, Vendas, Produtos, Contas e Etiquetas.",
-      side: "right",
+      side: isMobile ? "bottom" : "right",
       align: "start"
     }
   };
@@ -35,11 +42,10 @@ export function iniciarTutorial() {
         popover: {
           title: "Dashboard da Doces Lucelian 🍬",
           description: "Bem-vindo ao seu painel financeiro geral! Este é o ponto central para acompanhar a saúde da sua fábrica de doces.",
-          side: "right",
+          side: isMobile ? "bottom" : "right",
           align: "start"
         }
       },
-      stepNav,
       {
         element: "#tour-metrics",
         popover: {
@@ -57,12 +63,10 @@ export function iniciarTutorial() {
           side: "bottom",
           align: "center"
         }
-      },
-      stepLulu
+      }
     ];
   } else if (path.startsWith("/clientes")) {
     steps = [
-      stepNav,
       {
         element: "#tour-clientes-add",
         popover: {
@@ -89,12 +93,10 @@ export function iniciarTutorial() {
           side: "top",
           align: "center"
         }
-      },
-      stepLulu
+      }
     ];
   } else if (path.startsWith("/produtos")) {
     steps = [
-      stepNav,
       {
         element: "#tour-produtos-add",
         popover: {
@@ -112,12 +114,10 @@ export function iniciarTutorial() {
           side: "top",
           align: "center"
         }
-      },
-      stepLulu
+      }
     ];
   } else if (path.startsWith("/vendas")) {
     steps = [
-      stepNav,
       {
         element: "#tour-vendas-add",
         popover: {
@@ -144,12 +144,10 @@ export function iniciarTutorial() {
           side: "top",
           align: "center"
         }
-      },
-      stepLulu
+      }
     ];
   } else if (path.startsWith("/contas-a-pagar")) {
     steps = [
-      stepNav,
       {
         element: "#tour-contas-add",
         popover: {
@@ -167,12 +165,10 @@ export function iniciarTutorial() {
           side: "top",
           align: "center"
         }
-      },
-      stepLulu
+      }
     ];
   } else if (path.startsWith("/etiquetas")) {
     steps = [
-      stepNav,
       {
         element: "#venda-select",
         popover: {
@@ -199,18 +195,16 @@ export function iniciarTutorial() {
           side: "bottom",
           align: "center"
         }
-      },
-      stepLulu
+      }
     ];
   } else if (path.startsWith("/usuarios")) {
     steps = [
-      stepNav,
       {
         element: "#tour-usuarios-add",
         popover: {
           title: "Novo Operador 🔑",
           description: "Crie novos acessos para o painel de gerenciamento informando o e-mail/login e cadastrando a senha inicial.",
-          side: "right",
+          side: isMobile ? "bottom" : "right",
           align: "start"
         }
       },
@@ -222,8 +216,37 @@ export function iniciarTutorial() {
           side: "top",
           align: "center"
         }
+      }
+    ];
+  } else if (path.startsWith("/precificacao")) {
+    steps = [
+      {
+        element: "#tour-precificacao-config",
+        popover: {
+          title: "Configuração da Análise ⚙️",
+          description: "Selecione o produto, o mês base para custos fixos e a quantidade produzida no mês.",
+          side: "bottom",
+          align: "center"
+        }
       },
-      stepLulu
+      {
+        element: "#tour-precificacao-insumos",
+        popover: {
+          title: "Insumos e Ingredientes 🧈",
+          description: "Adicione os ingredientes usados no produto. Defina o rendimento do lote (ex: rende 10 unidades) para calcular o custo unitário exato.",
+          side: "top",
+          align: "center"
+        }
+      },
+      {
+        element: "#tour-precificacao-calc",
+        popover: {
+          title: "Calculadora de Preço 📈",
+          description: "Ajuste a margem de lucro desejada para ver o preço sugerido. Clique em 'Aplicar' para salvar o novo preço no cadastro do produto.",
+          side: isMobile ? "top" : "left",
+          align: "center"
+        }
+      }
     ];
   } else {
     // Rota desconhecida ou genérica
@@ -233,13 +256,16 @@ export function iniciarTutorial() {
         popover: {
           title: "Doces Lucelian 🍬",
           description: "Bem-vindo ao sistema de gestão financeira!",
-          side: "right",
+          side: isMobile ? "bottom" : "right",
           align: "start"
         }
-      },
-      stepNav,
-      stepLulu
+      }
     ];
+  }
+
+  // Prepend navigation and append chat ONLY if they haven't seen it globally
+  if (!globalHelpSeen) {
+    steps = [stepNav, ...steps, stepLulu];
   }
 
   // Executa o tour configurado
@@ -249,7 +275,14 @@ export function iniciarTutorial() {
     prevBtnText: "< Anterior",
     doneBtnText: "Entendi! 👍",
     allowClose: true,
-    steps: steps
+    steps: steps,
+    onDestroyStarted: () => {
+      // Quando o tour for encerrado (ou finalizado), marca o help global como visto
+      if (!d.hasNextStep() || d.isActive()) {
+        localStorage.setItem("global_help_seen", "true");
+      }
+      d.destroy();
+    }
   });
 
   d.drive();

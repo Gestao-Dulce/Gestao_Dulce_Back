@@ -124,7 +124,7 @@ export function AppShell() {
             {/* Left side: Menu toggle for sidebar */}
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground">
+                <Button id="tour-mobile-nav" variant="ghost" size="icon" className="text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground">
                   <Menu className="size-5" />
                   <span className="sr-only">Menu de navegação</span>
                 </Button>

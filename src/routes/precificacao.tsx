@@ -175,7 +175,7 @@ function PrecificacaoPage() {
       </div>
 
       {/* ── Seletor de Produto e Mês ─────────────────────────────────────────── */}
-      <Card>
+      <Card id="tour-precificacao-config">
         <CardHeader>
           <CardTitle className="text-base">Configuração da análise</CardTitle>
         </CardHeader>
@@ -232,7 +232,7 @@ function PrecificacaoPage() {
           {/* ── Coluna esquerda: Insumos + Custos do mês ─────────────────────── */}
           <div className="xl:col-span-3 space-y-6">
             {/* Insumos */}
-            <Card>
+            <Card id="tour-precificacao-insumos">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base">
@@ -497,7 +497,7 @@ function PrecificacaoPage() {
             </Card>
 
             {/* Calculadora de margem */}
-            <Card>
+            <Card id="tour-precificacao-calc">
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
                   <TrendingUp className="size-4 text-primary" />
