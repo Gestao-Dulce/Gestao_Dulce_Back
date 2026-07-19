@@ -5,6 +5,7 @@ import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -15,7 +16,7 @@ import { brl } from "@/lib/format";
 import { toast } from "sonner";
 import {
   Plus, Pencil, Trash2, Calculator, TrendingUp, TrendingDown,
-  Package, Minus, AlertCircle, CheckCircle2, Info,
+  Package, Minus, AlertCircle, CheckCircle2, Info, EyeOff,
 } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -39,6 +40,19 @@ function PrecificacaoPage() {
   const [margem, setMargem] = useState<number>(40);
   const [openInsumo, setOpenInsumo] = useState(false);
   const [editInsumo, setEditInsumo] = useState<Insumo | null>(null);
+  const [custosExcluidos, setCustosExcluidos] = useState<Set<string>>(new Set());
+
+  const toggleExcluirCusto = (id: string) => {
+    setCustosExcluidos((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const excluirTodos = (excluir: boolean) => {
+    setCustosExcluidos(excluir ? new Set(contasDoMes.map((c) => c.id)) : new Set());
+  };
 
   // ── Queries ────────────────────────────────────────────────────────────────
   const { data: produtos = [] } = useQuery<Produto[]>({
@@ -84,7 +98,12 @@ function PrecificacaoPage() {
   const contasDoMes = contas.filter(
     (c) => c.vencimento >= inicioMes && c.vencimento <= fimMes
   );
-  const totalCustosDoMes = contasDoMes.reduce((s, c) => s + Number(c.valor), 0);
+  const totalCustosDoMes = contasDoMes
+    .filter((c) => !custosExcluidos.has(c.id))
+    .reduce((s, c) => s + Number(c.valor), 0);
+  const totalExcluido = contasDoMes
+    .filter((c) => custosExcluidos.has(c.id))
+    .reduce((s, c) => s + Number(c.valor), 0);
 
   const custoInsumos = insumos.reduce(
     (s, ins) => s + Number(ins.quantidade) * Number(ins.custo_unitario),
@@ -293,10 +312,18 @@ function PrecificacaoPage() {
                   <CardTitle className="text-base capitalize">
                     Custos de {mesLabel}
                   </CardTitle>
-                  <span className="text-sm text-muted-foreground">
-                    Total:{" "}
-                    <span className="font-semibold text-foreground tabular-nums">{brl(totalCustosDoMes)}</span>
-                  </span>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    {custosExcluidos.size > 0 && (
+                      <Badge variant="outline" className="text-xs gap-1">
+                        <EyeOff className="size-3" />
+                        {custosExcluidos.size} excluído(s)
+                      </Badge>
+                    )}
+                    <span>
+                      Considerado:{" "}
+                      <span className="font-semibold text-foreground tabular-nums">{brl(totalCustosDoMes)}</span>
+                    </span>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
@@ -305,32 +332,86 @@ function PrecificacaoPage() {
                     Nenhum custo encontrado para <span className="capitalize">{mesLabel}</span>.
                   </p>
                 ) : (
+                  <>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs text-muted-foreground">
+                      Marque os custos que <strong>não</strong> devem entrar no rateio deste produto.
+                    </p>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs h-7"
+                        onClick={() => excluirTodos(false)}
+                        disabled={custosExcluidos.size === 0}
+                      >
+                        Incluir todos
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs h-7"
+                        onClick={() => excluirTodos(true)}
+                        disabled={custosExcluidos.size === contasDoMes.length}
+                      >
+                        Excluir todos
+                      </Button>
+                    </div>
+                  </div>
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead className="w-10">Incluir</TableHead>
                         <TableHead>Fornecedor / Descrição</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead className="text-right">Valor</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {contasDoMes.map((c) => (
-                        <TableRow key={c.id}>
-                          <TableCell className="font-medium">{c.fornecedor}</TableCell>
-                          <TableCell>
-                            <Badge variant={c.status === "pago" ? "default" : "secondary"} className="text-xs">
-                              {c.status === "pago" ? "Pago" : "Pendente"}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right tabular-nums">{brl(c.valor)}</TableCell>
-                        </TableRow>
-                      ))}
+                      {contasDoMes.map((c) => {
+                        const excluido = custosExcluidos.has(c.id);
+                        return (
+                          <TableRow
+                            key={c.id}
+                            className={excluido ? "opacity-40" : ""}
+                          >
+                            <TableCell>
+                              <Checkbox
+                                id={`custo-${c.id}`}
+                                checked={!excluido}
+                                onCheckedChange={() => toggleExcluirCusto(c.id)}
+                                aria-label={excluido ? `Incluir ${c.fornecedor} no rateio` : `Excluir ${c.fornecedor} do rateio`}
+                              />
+                            </TableCell>
+                            <TableCell className={`font-medium ${excluido ? "line-through" : ""}`}>
+                              {c.fornecedor}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant={c.status === "pago" ? "default" : "secondary"} className="text-xs">
+                                {c.status === "pago" ? "Pago" : "Pendente"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className={`text-right tabular-nums ${excluido ? "line-through text-muted-foreground" : ""}`}>
+                              {brl(c.valor)}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
+                  </>
                 )}
                 <div className="mt-3 pt-3 border-t rounded-md bg-muted/40 px-3 py-2 text-sm flex flex-col gap-1">
+                  {totalExcluido > 0 && (
+                    <div className="flex justify-between text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <EyeOff className="size-3" /> Excluído do rateio
+                      </span>
+                      <span className="tabular-nums line-through">{brl(totalExcluido)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Total do mês</span>
+                    <span className="text-muted-foreground">Total considerado</span>
                     <span className="font-semibold tabular-nums">{brl(totalCustosDoMes)}</span>
                   </div>
                   <div className="flex justify-between">
