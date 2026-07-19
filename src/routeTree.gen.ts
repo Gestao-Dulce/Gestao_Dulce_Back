@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as VendasRouteImport } from './routes/vendas'
 import { Route as UsuariosRouteImport } from './routes/usuarios'
 import { Route as ProdutosRouteImport } from './routes/produtos'
+import { Route as PrecificacaoRouteImport } from './routes/precificacao'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as EtiquetasRouteImport } from './routes/etiquetas'
 import { Route as ContasAPagarRouteImport } from './routes/contas-a-pagar'
@@ -31,6 +32,11 @@ const UsuariosRoute = UsuariosRouteImport.update({
 const ProdutosRoute = ProdutosRouteImport.update({
   id: '/produtos',
   path: '/produtos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrecificacaoRoute = PrecificacaoRouteImport.update({
+  id: '/precificacao',
+  path: '/precificacao',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -65,6 +71,7 @@ export interface FileRoutesByFullPath {
   '/contas-a-pagar': typeof ContasAPagarRoute
   '/etiquetas': typeof EtiquetasRoute
   '/login': typeof LoginRoute
+  '/precificacao': typeof PrecificacaoRoute
   '/produtos': typeof ProdutosRoute
   '/usuarios': typeof UsuariosRoute
   '/vendas': typeof VendasRoute
@@ -75,6 +82,7 @@ export interface FileRoutesByTo {
   '/contas-a-pagar': typeof ContasAPagarRoute
   '/etiquetas': typeof EtiquetasRoute
   '/login': typeof LoginRoute
+  '/precificacao': typeof PrecificacaoRoute
   '/produtos': typeof ProdutosRoute
   '/usuarios': typeof UsuariosRoute
   '/vendas': typeof VendasRoute
@@ -86,6 +94,7 @@ export interface FileRoutesById {
   '/contas-a-pagar': typeof ContasAPagarRoute
   '/etiquetas': typeof EtiquetasRoute
   '/login': typeof LoginRoute
+  '/precificacao': typeof PrecificacaoRoute
   '/produtos': typeof ProdutosRoute
   '/usuarios': typeof UsuariosRoute
   '/vendas': typeof VendasRoute
@@ -98,6 +107,7 @@ export interface FileRouteTypes {
     | '/contas-a-pagar'
     | '/etiquetas'
     | '/login'
+    | '/precificacao'
     | '/produtos'
     | '/usuarios'
     | '/vendas'
@@ -108,6 +118,7 @@ export interface FileRouteTypes {
     | '/contas-a-pagar'
     | '/etiquetas'
     | '/login'
+    | '/precificacao'
     | '/produtos'
     | '/usuarios'
     | '/vendas'
@@ -118,6 +129,7 @@ export interface FileRouteTypes {
     | '/contas-a-pagar'
     | '/etiquetas'
     | '/login'
+    | '/precificacao'
     | '/produtos'
     | '/usuarios'
     | '/vendas'
@@ -129,6 +141,7 @@ export interface RootRouteChildren {
   ContasAPagarRoute: typeof ContasAPagarRoute
   EtiquetasRoute: typeof EtiquetasRoute
   LoginRoute: typeof LoginRoute
+  PrecificacaoRoute: typeof PrecificacaoRoute
   ProdutosRoute: typeof ProdutosRoute
   UsuariosRoute: typeof UsuariosRoute
   VendasRoute: typeof VendasRoute
@@ -148,6 +161,13 @@ declare module '@tanstack/react-router' {
       path: '/usuarios'
       fullPath: '/usuarios'
       preLoaderRoute: typeof UsuariosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/precificacao': {
+      id: '/precificacao'
+      path: '/precificacao'
+      fullPath: '/precificacao'
+      preLoaderRoute: typeof PrecificacaoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/produtos': {
@@ -201,6 +221,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContasAPagarRoute: ContasAPagarRoute,
   EtiquetasRoute: EtiquetasRoute,
   LoginRoute: LoginRoute,
+  PrecificacaoRoute: PrecificacaoRoute,
   ProdutosRoute: ProdutosRoute,
   UsuariosRoute: UsuariosRoute,
   VendasRoute: VendasRoute,

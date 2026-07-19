@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Users, ShoppingBag, CalendarClock, Moon, Sun, Package, UserPlus, LogOut, Menu, Truck, HelpCircle } from "lucide-react";
+import { LayoutDashboard, Users, ShoppingBag, CalendarClock, Moon, Sun, Package, UserPlus, LogOut, Menu, Truck, HelpCircle, Calculator } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ const nav = [
   { to: "/vendas", label: "Vendas", icon: ShoppingBag },
   { to: "/contas-a-pagar", label: "Contas a pagar", icon: CalendarClock },
   { to: "/etiquetas", label: "Etiquetas", icon: Truck },
+  { to: "/precificacao", label: "Precificação", icon: Calculator },
 ];
 
 export function AppShell() {
