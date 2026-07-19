@@ -16,7 +16,7 @@ import { brl } from "@/lib/format";
 import { toast } from "sonner";
 import {
   Plus, Pencil, Trash2, Calculator, TrendingUp, TrendingDown,
-  Package, Minus, AlertCircle, CheckCircle2, Info, EyeOff,
+  Package, Minus, AlertCircle, CheckCircle2, Info, EyeOff, Save,
 } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -136,6 +136,22 @@ function PrecificacaoPage() {
     onSuccess: () => {
       toast.success("Insumo removido");
       qc.invalidateQueries({ queryKey: ["produto_insumos", produtoId] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  // ── Mutation: atualizar preço do produto ──────────────────────────────────
+  const atualizarPreco = useMutation({
+    mutationFn: async (novoValor: number) => {
+      const { error } = await supabase
+        .from("produtos" as any)
+        .update({ valor: novoValor })
+        .eq("id", produtoId);
+      if (error) throw error;
+    },
+    onSuccess: (_, novoValor) => {
+      toast.success(`Preço atualizado para ${brl(novoValor)}`);
+      qc.invalidateQueries({ queryKey: ["produtos"] });
     },
     onError: (e: any) => toast.error(e.message),
   });
@@ -474,12 +490,22 @@ function PrecificacaoPage() {
                   </div>
                 </div>
 
-                <div className="rounded-lg border-2 border-primary/40 bg-primary/5 p-4 text-center space-y-1">
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Preço sugerido</p>
-                  <p className="text-4xl font-bold text-primary tabular-nums">{brl(precoSugerido)}</p>
-                  <p className="text-xs text-muted-foreground">
-                    Custo {brl(custoTotal)} + {margem}% de margem
-                  </p>
+                <div className="rounded-lg border-2 border-primary/40 bg-primary/5 p-4 text-center space-y-3">
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Preço sugerido</p>
+                    <p className="text-4xl font-bold text-primary tabular-nums">{brl(precoSugerido)}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Custo {brl(custoTotal)} + {margem}% de margem
+                    </p>
+                  </div>
+                  <Button
+                    className="w-full gap-2"
+                    onClick={() => atualizarPreco.mutate(parseFloat(precoSugerido.toFixed(2)))}
+                    disabled={atualizarPreco.isPending || !produtoId}
+                  >
+                    <Save className="size-4" />
+                    {atualizarPreco.isPending ? "Salvando..." : `Aplicar ${brl(precoSugerido)} ao produto`}
+                  </Button>
                 </div>
 
                 {/* Comparativo com preço atual */}
@@ -556,6 +582,7 @@ function PrecificacaoPage() {
                       <TableHead>Margem</TableHead>
                       <TableHead className="text-right">Preço sugerido</TableHead>
                       <TableHead className="text-right">Lucro / un.</TableHead>
+                      <TableHead className="text-right">Ação</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -575,6 +602,18 @@ function PrecificacaoPage() {
                           </TableCell>
                           <TableCell className="text-right tabular-nums">{brl(p)}</TableCell>
                           <TableCell className="text-right tabular-nums text-green-600 dark:text-green-400">+{brl(l)}</TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 text-xs gap-1 px-2"
+                              onClick={(e) => { e.stopPropagation(); atualizarPreco.mutate(parseFloat(p.toFixed(2))); }}
+                              disabled={atualizarPreco.isPending}
+                              title={`Aplicar ${brl(p)} como preço do produto`}
+                            >
+                              <Save className="size-3" /> Aplicar
+                            </Button>
+                          </TableCell>
                         </TableRow>
                       );
                     })}
