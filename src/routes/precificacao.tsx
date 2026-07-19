@@ -16,7 +16,7 @@ import { brl } from "@/lib/format";
 import { toast } from "sonner";
 import {
   Plus, Pencil, Trash2, Calculator, TrendingUp, TrendingDown,
-  Package, Minus, AlertCircle, CheckCircle2, Info, EyeOff, Save,
+  Package, Minus, AlertCircle, CheckCircle2, Info, EyeOff, Save, Layers,
 } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -41,6 +41,7 @@ function PrecificacaoPage() {
   const [openInsumo, setOpenInsumo] = useState(false);
   const [editInsumo, setEditInsumo] = useState<Insumo | null>(null);
   const [custosExcluidos, setCustosExcluidos] = useState<Set<string>>(new Set());
+  const [rendimentoLote, setRendimentoLote] = useState<number>(1);
 
   const toggleExcluirCusto = (id: string) => {
     setCustosExcluidos((prev) => {
@@ -105,10 +106,12 @@ function PrecificacaoPage() {
     .filter((c) => custosExcluidos.has(c.id))
     .reduce((s, c) => s + Number(c.valor), 0);
 
-  const custoInsumos = insumos.reduce(
+  const custoLote = insumos.reduce(
     (s, ins) => s + Number(ins.quantidade) * Number(ins.custo_unitario),
     0
   );
+  const rendimento = rendimentoLote > 0 ? rendimentoLote : 1;
+  const custoInsumos = custoLote / rendimento;
 
   const qtd = qtdProduzida > 0 ? qtdProduzida : 1;
   const custoRateado = totalCustosDoMes / qtd;
@@ -242,6 +245,27 @@ function PrecificacaoPage() {
                     <Plus className="size-4 mr-1" /> Adicionar insumo
                   </Button>
                 </div>
+                {/* Rendimento do lote */}
+                <div className="flex items-center gap-3 mt-3 p-3 rounded-lg bg-muted/50 border">
+                  <Layers className="size-4 text-primary shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium">Rendimento do lote</p>
+                    <p className="text-xs text-muted-foreground">Quantas unidades este conjunto de insumos produz?</p>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <Input
+                      type="number"
+                      min={1}
+                      step={1}
+                      value={rendimentoLote}
+                      onChange={(e) => setRendimentoLote(Number(e.target.value) || 1)}
+                      className="w-24 h-8 text-sm text-center"
+                    />
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">
+                      {produtoSelecionado?.unidade}(s)
+                    </span>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -311,11 +335,17 @@ function PrecificacaoPage() {
                   </TableBody>
                 </Table>
                 {insumos.length > 0 && (
-                  <div className="flex justify-end mt-3 pt-3 border-t">
-                    <div className="text-sm text-muted-foreground">
-                      Total de insumos:{" "}
-                      <span className="font-semibold text-foreground tabular-nums">{brl(custoInsumos)}</span>
+                  <div className="mt-3 pt-3 border-t space-y-1.5">
+                    <div className="flex justify-between text-sm text-muted-foreground">
+                      <span>Custo total do lote ({rendimentoLote} {produtoSelecionado?.unidade})</span>
+                      <span className="tabular-nums font-medium text-foreground">{brl(custoLote)}</span>
                     </div>
+                    {rendimentoLote > 1 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">÷ {rendimentoLote} {produtoSelecionado?.unidade}(s) por lote</span>
+                        <span className="font-semibold text-primary tabular-nums">{brl(custoInsumos)} / un.</span>
+                      </div>
+                    )}
                   </div>
                 )}
               </CardContent>
@@ -452,8 +482,14 @@ function PrecificacaoPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <CostLine label="Custo de insumos" value={custoInsumos} />
-                <CostLine label={`Custo rateado (${qtdProduzida} un.)`} value={custoRateado} />
+                {rendimentoLote > 1 && (
+                  <div className="text-xs text-muted-foreground flex justify-between pb-1 border-b">
+                    <span className="flex items-center gap-1"><Layers className="size-3" /> Lote de {rendimentoLote} {produtoSelecionado?.unidade}(s)</span>
+                    <span className="tabular-nums">{brl(custoLote)} / lote</span>
+                  </div>
+                )}
+                <CostLine label={rendimentoLote > 1 ? `Insumos (${brl(custoLote)} ÷ ${rendimentoLote})` : "Custo de insumos"} value={custoInsumos} />
+                <CostLine label={`Custos fixos rateados (${qtdProduzida} un.)`} value={custoRateado} />
                 <div className="border-t pt-3">
                   <CostLine label="Custo total por unidade" value={custoTotal} highlight />
                 </div>
