@@ -14,6 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { brl, dataBR, hoje, formatCPFCNPJ, formatPhone } from "@/lib/format";
+import { normalizar } from "@/lib/utils";
 import { imprimir } from "@/lib/report";
 import { toast } from "sonner";
 import { Plus, Pencil, Search, Loader2, Printer, Trash2 } from "lucide-react";
@@ -143,7 +144,7 @@ function ClientesPage() {
   }));
 
   const filtrados = enriched
-    .filter((c) => c.nome.toLowerCase().includes(busca.toLowerCase()) || (c.cpf_cnpj ?? "").includes(busca))
+    .filter((c) => normalizar(c.nome).includes(normalizar(busca)) || (c.cpf_cnpj ?? "").includes(busca))
     .filter((c) => filtroStatus === "todos" || c._status === filtroStatus)
     .sort((a, b) => {
       const av = sortKey === "total" ? a._total : (a as any)[sortKey] ?? "";

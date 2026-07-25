@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { brl, dataBR, hoje, addMeses } from "@/lib/format";
+import { normalizar } from "@/lib/utils";
 import { imprimir } from "@/lib/report";
 import { toast } from "sonner";
 import { Plus, Printer, Pencil, CheckCircle2, Repeat, Trash2, AlertTriangle } from "lucide-react";
@@ -246,7 +247,7 @@ function ContasPage() {
 
   const filtradas = pendentes
     .filter((c) => c.vencimento >= inicioMes && c.vencimento <= fimMes)
-    .filter((c) => c.fornecedor.toLowerCase().includes(busca.toLowerCase()))
+    .filter((c) => normalizar(c.fornecedor).includes(normalizar(busca)))
     .sort((a, b) => {
       const av = (a as any)[sortKey], bv = (b as any)[sortKey];
       if (av < bv) return sortDir === "asc" ? -1 : 1;

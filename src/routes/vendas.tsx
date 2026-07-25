@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { brl, dataBR, hoje } from "@/lib/format";
+import { normalizar } from "@/lib/utils";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Trash2, Pencil, Printer, UserPlus, PackagePlus, CheckCircle } from "lucide-react";
@@ -168,11 +169,11 @@ function VendasPage() {
     .filter((v) => filtroStatus === "todos" || v._status === filtroStatus)
     .filter((v) => (!dataIni || v.data >= dataIni) && (!dataFim || v.data <= dataFim))
     .filter((v) => {
-      const s = busca.toLowerCase();
+      const s = normalizar(busca);
       return (
-        v.clientes?.nome?.toLowerCase().includes(s) ||
-        v.nota_fiscal?.toLowerCase().includes(s) ||
-        (v.venda_itens ?? []).some((i: any) => i.produto.toLowerCase().includes(s))
+        normalizar(v.clientes?.nome ?? "").includes(s) ||
+        normalizar(v.nota_fiscal ?? "").includes(s) ||
+        (v.venda_itens ?? []).some((i: any) => normalizar(i.produto).includes(s))
       );
     })
     .sort((a: any, b: any) => {

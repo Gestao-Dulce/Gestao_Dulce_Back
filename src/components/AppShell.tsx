@@ -64,9 +64,9 @@ export function AppShell() {
   );
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-background text-foreground">
+    <div className="h-screen flex flex-col md:flex-row bg-background text-foreground overflow-hidden">
       {/* Sidebar - Desktop */}
-      <aside className="w-64 shrink-0 bg-sidebar text-sidebar-foreground hidden md:flex flex-col justify-between border-r border-sidebar-border">
+      <aside className="w-64 shrink-0 bg-sidebar text-sidebar-foreground hidden md:flex flex-col justify-between border-r border-sidebar-border sticky top-0 h-screen">
         <div className="flex flex-col">
           <div className="px-4 py-4">
             <div id="tour-logo" className="flex items-center justify-center">
@@ -92,8 +92,8 @@ export function AppShell() {
           </Button>
         </div>
       </aside>
-      <div className="flex-1 flex flex-col min-w-0">
-        <header className="border-b border-sidebar-border md:border-border px-4 md:px-10 py-3 md:py-4 flex items-center justify-between bg-sidebar md:bg-card text-sidebar-foreground md:text-foreground">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <header className="sticky top-0 z-10 border-b border-sidebar-border md:border-border px-4 md:px-10 py-3 md:py-4 flex items-center justify-between bg-sidebar md:bg-card text-sidebar-foreground md:text-foreground">
           {/* Desktop header view */}
           <div className="hidden md:flex items-center justify-between w-full">
             <div>
@@ -173,7 +173,7 @@ export function AppShell() {
           </div>
         </header>
 
-        <main className="flex-1 p-4 md:p-10 overflow-y-auto">
+        <main className="flex-1 p-4 md:p-10 overflow-y-auto min-h-0">
           <Outlet />
         </main>
       </div>

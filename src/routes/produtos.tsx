@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { brl } from "@/lib/format";
+import { normalizar } from "@/lib/utils";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Printer } from "lucide-react";
 import {
@@ -53,8 +54,8 @@ function ProdutosPage() {
   });
 
   const filtrados = produtos.filter((p) =>
-    p.nome.toLowerCase().includes(busca.toLowerCase()) ||
-    (p.observacao ?? "").toLowerCase().includes(busca.toLowerCase())
+    normalizar(p.nome).includes(normalizar(busca)) ||
+    normalizar(p.observacao ?? "").includes(normalizar(busca))
   );
 
   const imprimirRelatorio = () => {
