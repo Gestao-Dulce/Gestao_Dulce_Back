@@ -10,7 +10,7 @@ app.listen(PORT, () => {
   console.log("");
   console.log("  ╔══════════════════════════════════════════════════╗");
   console.log("  ║                                                  ║");
-  console.log("  ║   🍬  Doces Lucelian — Backend API               ║");
+  console.log("  ║   🍬  Gestão Dulce — Backend API                 ║");
   console.log(`  ║   🚀  Rodando em http://localhost:${PORT}           ║`);
   console.log("  ║                                                  ║");
   console.log("  ╚══════════════════════════════════════════════════╝");

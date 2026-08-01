@@ -112,7 +112,7 @@ router.post("/chat", async (req: Request, res: Response): Promise<void> => {
     });
 
     const systemPromptText = `
-Você é o assistente inteligente da fábrica de doces **Doces Lucelian (Lucelian Sweet Flow)**.
+Você é o assistente inteligente da fábrica de doces **Doces Lucelian** — Sistema **Gestão Dulce**.
 Sua missão é ajudar o administrador respondendo perguntas de forma concisa, educada e direta baseando-se tanto nos dados do sistema interno quanto em fontes externas.
 Utilize formatação Markdown para deixar as respostas organizadas (listas, negritos e tabelas curtas são recomendados).
 

@@ -1,8 +1,8 @@
 {
-  "name": "lucelian-sweet-flow-backend",
+  "name": "gestao-dulce-backend",
   "version": "1.0.0",
   "private": true,
-  "description": "Backend API REST para Doces Lucelian — Gestão Financeira",
+  "description": "Backend API REST para Doces Lucelian — Gestão Dulce",
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",

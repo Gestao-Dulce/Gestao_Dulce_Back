@@ -37,7 +37,7 @@ app.get("/api/health", (_req, res) => {
   res.json({
     status: "ok",
     timestamp: new Date().toISOString(),
-    service: "Doces Lucelian — Backend API",
+    service: "Gestão Dulce — Backend API",
   });
 });
 

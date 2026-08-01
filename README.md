@@ -1,6 +1,6 @@
-# Doces Lucelian — Gestão Financeira (Lucelian Sweet Flow)
+# Gestão Dulce — Doces Lucelian
 
-Sistema completo de gestão financeira e operacional para a **Doces Lucelian**. O projeto é composto por um **Frontend** moderno desenvolvido com React/TanStack Start e um **Backend** robusto em Express com integração ao Supabase.
+Sistema completo de gestão financeira e operacional para a **Doces Lucelian**. O projeto é composto por um **Frontend** moderno desenvolvido com React/TanStack Start e um **Backend** robusto em Express com integração ao Supabase. Sistema: **Gestão Dulce**.
 
 ---
 

@@ -40,7 +40,7 @@ export function iniciarTutorial() {
       {
         element: "#tour-logo",
         popover: {
-          title: "Dashboard da Doces Lucelian 🍬",
+          title: "Dashboard — Gestão Dulce 🍬",
           description: "Bem-vindo ao seu painel financeiro geral! Este é o ponto central para acompanhar a saúde da sua fábrica de doces.",
           side: isMobile ? "bottom" : "right",
           align: "start"
@@ -254,7 +254,7 @@ export function iniciarTutorial() {
       {
         element: "#tour-logo",
         popover: {
-          title: "Doces Lucelian 🍬",
+          title: "Gestão Dulce 🍬",
           description: "Bem-vindo ao sistema de gestão financeira!",
           side: isMobile ? "bottom" : "right",
           align: "start"
