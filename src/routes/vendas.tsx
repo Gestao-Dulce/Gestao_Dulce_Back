@@ -553,7 +553,19 @@ function VendaDialog({ open, onClose, clientes, produtosUsados, produtosCadastra
           }
         }}
       >
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent
+          className="max-w-3xl max-h-[90vh] overflow-y-auto"
+          onPointerDownOutside={(e) => {
+            if (isSubDialogOpenRef.current || novoOpen || novoProdOpen) {
+              e.preventDefault();
+            }
+          }}
+          onInteractOutside={(e) => {
+            if (isSubDialogOpenRef.current || novoOpen || novoProdOpen) {
+              e.preventDefault();
+            }
+          }}
+        >
           <DialogHeader><DialogTitle>{editId ? "Editar venda" : "Nova venda"}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
@@ -760,7 +772,10 @@ function VendaDialog({ open, onClose, clientes, produtosUsados, produtosCadastra
               <Button
                 variant="ghost"
                 type="button"
+                onPointerDown={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
                 onClick={(e) => {
+                  e.preventDefault();
                   e.stopPropagation();
                   fecharNovoCliente();
                 }}
@@ -769,7 +784,10 @@ function VendaDialog({ open, onClose, clientes, produtosUsados, produtosCadastra
               </Button>
               <Button
                 type="button"
+                onPointerDown={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
                 onClick={(e) => {
+                  e.preventDefault();
                   e.stopPropagation();
                   criarCliente();
                 }}
@@ -833,7 +851,10 @@ function VendaDialog({ open, onClose, clientes, produtosUsados, produtosCadastra
               <Button
                 variant="ghost"
                 type="button"
+                onPointerDown={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
                 onClick={(e) => {
+                  e.preventDefault();
                   e.stopPropagation();
                   fecharNovoProduto();
                 }}
@@ -842,7 +863,10 @@ function VendaDialog({ open, onClose, clientes, produtosUsados, produtosCadastra
               </Button>
               <Button
                 type="button"
+                onPointerDown={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
                 onClick={(e) => {
+                  e.preventDefault();
                   e.stopPropagation();
                   criarProduto();
                 }}
