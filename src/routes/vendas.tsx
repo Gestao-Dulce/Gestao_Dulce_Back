@@ -520,102 +520,78 @@ function VendaDialog({ open, onClose, clientes, produtosUsados, produtosCadastra
   };
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader><DialogTitle>{editId ? "Editar venda" : "Nova venda"}</DialogTitle></DialogHeader>
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label>Cliente</Label>
-              <div className="flex gap-2">
-                <Select value={cliente} onValueChange={setCliente}>
-                  <SelectTrigger className="flex-1"><SelectValue placeholder="Selecione..." /></SelectTrigger>
-                  <SelectContent>
-                    {clientes.map((c) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-                <Button type="button" variant="outline" size="icon" title="Novo cliente" onClick={() => setNovoOpen(true)}>
-                  <UserPlus className="size-4" />
-                </Button>
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Data da venda</Label>
-              <Input type="date" value={data} onChange={(e) => setData(e.target.value)} />
-            </div>
-          </div>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base">Carrinho</CardTitle>
-              <div className="flex gap-2">
-                <Button size="sm" variant="outline" onClick={addItem}><Plus className="size-3.5 mr-1" /> Adicionar produto</Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {itens.length === 0 && <div className="text-sm text-muted-foreground py-2">Nenhum item.</div>}
-              {itens.length > 0 && (
-                <div className="hidden md:grid grid-cols-[1fr_90px_110px_120px_40px_40px] gap-2 text-xs uppercase tracking-wide text-muted-foreground px-1">
-                  <div>Produtos</div>
-                  <div>Quantidade</div>
-                  <div>Unidade</div>
-                  <div>Valor (R$)</div>
-                  <div></div>
-                  <div></div>
+    <>
+      <Dialog open={open} onOpenChange={(o) => !o && !novoOpen && !novoProdOpen && onClose()}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>{editId ? "Editar venda" : "Nova venda"}</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Cliente</Label>
+                <div className="flex gap-2">
+                  <Select value={cliente} onValueChange={setCliente}>
+                    <SelectTrigger className="flex-1"><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                    <SelectContent>
+                      {clientes.map((c) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <Button type="button" variant="outline" size="icon" title="Novo cliente" onClick={() => setNovoOpen(true)}>
+                    <UserPlus className="size-4" />
+                  </Button>
                 </div>
-              )}
-              {itens.map((i) => (
-                <div key={i.id} className="flex flex-col gap-2 p-3 border rounded-lg md:grid md:grid-cols-[1fr_90px_110px_120px_40px_40px] md:gap-2 md:items-center md:p-0 md:border-0">
-                  {/* Select on product: always present */}
-                  <div className="flex-1 min-w-0">
-                    <Label className="text-[10px] uppercase text-muted-foreground md:hidden mb-1 block">Produto</Label>
-                    <Select value={i.produto} onValueChange={(v) => aplicarProdutoCadastrado(i.id, v)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o produto" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {produtosCadastrados.map((p: any) => (
-                          <SelectItem key={p.id} value={p.nome}>
-                            {p.nome} ({cap(p.unidade)})
-                          </SelectItem>
-                        ))}
-                        {i.produto && !produtosCadastrados.some((p: any) => p.nome === i.produto) && (
-                          <SelectItem value={i.produto}>{i.produto}</SelectItem>
-                        )}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  {/* Desktop elements - hidden on mobile */}
-                  <div className="hidden md:block">
-                    <Input type="number" step="0.01" min="0" placeholder="Qtd" value={i.quantidade} onChange={(e) => updItem(i.id, { quantidade: Number(e.target.value) })} />
-                  </div>
-                  <div className="hidden md:block">
-                    <Select value={i.unidade} onValueChange={(v) => updItem(i.id, { unidade: v })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {UNIDADES.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="hidden md:block">
-                    <CurrencyInput value={i.valor_unitario} onValueChange={(n) => updItem(i.id, { valor_unitario: n })} />
-                  </div>
-                  <div className="hidden md:flex justify-center">
-                    <Button size="icon" variant="ghost" title="Cadastrar novo produto" onClick={() => abrirNovoProduto(i.id)}><PackagePlus className="size-4" /></Button>
-                  </div>
-                  <div className="hidden md:flex justify-center">
-                    <Button size="icon" variant="ghost" onClick={() => delItem(i.id)}><Trash2 className="size-4" /></Button>
-                  </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Data da venda</Label>
+                <Input type="date" value={data} onChange={(e) => setData(e.target.value)} />
+              </div>
+            </div>
 
-                  {/* Mobile inputs - hidden on desktop */}
-                  <div className="grid grid-cols-2 gap-2 md:hidden pt-1 border-t border-dashed border-border mt-1">
-                    <div className="space-y-1">
-                      <Label className="text-[10px] uppercase text-muted-foreground">Qtd</Label>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-base">Carrinho</CardTitle>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" onClick={addItem}><Plus className="size-3.5 mr-1" /> Adicionar produto</Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {itens.length === 0 && <div className="text-sm text-muted-foreground py-2">Nenhum item.</div>}
+                {itens.length > 0 && (
+                  <div className="hidden md:grid grid-cols-[1fr_90px_110px_120px_40px_40px] gap-2 text-xs uppercase tracking-wide text-muted-foreground px-1">
+                    <div>Produtos</div>
+                    <div>Quantidade</div>
+                    <div>Unidade</div>
+                    <div>Valor (R$)</div>
+                    <div></div>
+                    <div></div>
+                  </div>
+                )}
+                {itens.map((i) => (
+                  <div key={i.id} className="flex flex-col gap-2 p-3 border rounded-lg md:grid md:grid-cols-[1fr_90px_110px_120px_40px_40px] md:gap-2 md:items-center md:p-0 md:border-0">
+                    {/* Select on product: always present */}
+                    <div className="flex-1 min-w-0">
+                      <Label className="text-[10px] uppercase text-muted-foreground md:hidden mb-1 block">Produto</Label>
+                      <Select value={i.produto} onValueChange={(v) => aplicarProdutoCadastrado(i.id, v)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o produto" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {produtosCadastrados.map((p: any) => (
+                            <SelectItem key={p.id} value={p.nome}>
+                              {p.nome} ({cap(p.unidade)})
+                            </SelectItem>
+                          ))}
+                          {i.produto && !produtosCadastrados.some((p: any) => p.nome === i.produto) && (
+                            <SelectItem value={i.produto}>{i.produto}</SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    {/* Desktop elements - hidden on mobile */}
+                    <div className="hidden md:block">
                       <Input type="number" step="0.01" min="0" placeholder="Qtd" value={i.quantidade} onChange={(e) => updItem(i.id, { quantidade: Number(e.target.value) })} />
                     </div>
-                    <div className="space-y-1">
-                      <Label className="text-[10px] uppercase text-muted-foreground">Unidade</Label>
+                    <div className="hidden md:block">
                       <Select value={i.unidade} onValueChange={(v) => updItem(i.id, { unidade: v })}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
@@ -623,72 +599,106 @@ function VendaDialog({ open, onClose, clientes, produtosUsados, produtosCadastra
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="space-y-1">
-                      <Label className="text-[10px] uppercase text-muted-foreground">Valor unit.</Label>
+                    <div className="hidden md:block">
                       <CurrencyInput value={i.valor_unitario} onValueChange={(n) => updItem(i.id, { valor_unitario: n })} />
                     </div>
-                    <div className="flex items-end justify-end gap-1 pb-1">
-                      <Button type="button" variant="outline" size="sm" className="h-9 px-2 text-xs" title="Cadastrar produto" onClick={() => abrirNovoProduto(i.id)}><PackagePlus className="size-3.5 mr-1" /> Novo</Button>
-                      <Button type="button" variant="destructive" size="icon" className="size-9" onClick={() => delItem(i.id)}><Trash2 className="size-3.5" /></Button>
+                    <div className="hidden md:flex justify-center">
+                      <Button size="icon" variant="ghost" title="Cadastrar novo produto" onClick={() => abrirNovoProduto(i.id)}><PackagePlus className="size-4" /></Button>
+                    </div>
+                    <div className="hidden md:flex justify-center">
+                      <Button size="icon" variant="ghost" onClick={() => delItem(i.id)}><Trash2 className="size-4" /></Button>
+                    </div>
+
+                    {/* Mobile inputs - hidden on desktop */}
+                    <div className="grid grid-cols-2 gap-2 md:hidden pt-1 border-t border-dashed border-border mt-1">
+                      <div className="space-y-1">
+                        <Label className="text-[10px] uppercase text-muted-foreground">Qtd</Label>
+                        <Input type="number" step="0.01" min="0" placeholder="Qtd" value={i.quantidade} onChange={(e) => updItem(i.id, { quantidade: Number(e.target.value) })} />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-[10px] uppercase text-muted-foreground">Unidade</Label>
+                        <Select value={i.unidade} onValueChange={(v) => updItem(i.id, { unidade: v })}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {UNIDADES.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-[10px] uppercase text-muted-foreground">Valor unit.</Label>
+                        <CurrencyInput value={i.valor_unitario} onValueChange={(n) => updItem(i.id, { valor_unitario: n })} />
+                      </div>
+                      <div className="flex items-end justify-end gap-1 pb-1">
+                        <Button type="button" variant="outline" size="sm" className="h-9 px-2 text-xs" title="Cadastrar produto" onClick={() => abrirNovoProduto(i.id)}><PackagePlus className="size-3.5 mr-1" /> Novo</Button>
+                        <Button type="button" variant="destructive" size="icon" className="size-9" onClick={() => delItem(i.id)}><Trash2 className="size-3.5" /></Button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+                ))}
+              </CardContent>
+            </Card>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label>Forma pgto</Label>
-              <Select value={forma} onValueChange={(v) => setForma(v as any)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="dinheiro">Dinheiro</SelectItem>
-                  <SelectItem value="pix">PIX</SelectItem>
-                  <SelectItem value="cartao">Cartão</SelectItem>
-                  <SelectItem value="boleto">Boleto</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Forma pgto</Label>
+                <Select value={forma} onValueChange={(v) => setForma(v as any)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="dinheiro">Dinheiro</SelectItem>
+                    <SelectItem value="pix">PIX</SelectItem>
+                    <SelectItem value="cartao">Cartão</SelectItem>
+                    <SelectItem value="boleto">Boleto</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Status pagamento</Label>
+                <Select value={statusPgto} onValueChange={(v) => setStatusPgto(v as any)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pago">Pago</SelectItem>
+                    <SelectItem value="pendente">Pendente</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Data prevista de pagamento</Label>
+                <Input type="date" value={dataPgto} onChange={(e) => setDataPgto(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Nota fiscal</Label>
+                <Input value={notaFiscal} onChange={(e) => setNotaFiscal(e.target.value)} />
+              </div>
+              <div className="space-y-1.5 col-span-2">
+                <Label>Desconto (R$)</Label>
+                <CurrencyInput value={desconto} onValueChange={setDesconto} />
+              </div>
             </div>
-            <div className="space-y-1.5">
-              <Label>Status pagamento</Label>
-              <Select value={statusPgto} onValueChange={(v) => setStatusPgto(v as any)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pago">Pago</SelectItem>
-                  <SelectItem value="pendente">Pendente</SelectItem>
-                </SelectContent>
-              </Select>
+
+            <div className="rounded-md border border-border bg-accent/30 px-4 py-3 space-y-1">
+              <div className="flex justify-between text-sm text-muted-foreground"><span>Subtotal</span><span className="tabular-nums">{brl(subtotal)}</span></div>
+              <div className="flex justify-between text-sm text-muted-foreground"><span>Desconto</span><span className="tabular-nums">- {brl(desconto)}</span></div>
+              <div className="flex justify-between font-semibold text-lg pt-1 border-t border-border"><span>Valor Total</span><span className="tabular-nums text-primary">{brl(total)}</span></div>
             </div>
-            <div className="space-y-1.5">
-              <Label>Data prevista de pagamento</Label>
-              <Input type="date" value={dataPgto} onChange={(e) => setDataPgto(e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Nota fiscal</Label>
-              <Input value={notaFiscal} onChange={(e) => setNotaFiscal(e.target.value)} />
-            </div>
-            <div className="space-y-1.5 col-span-2">
-              <Label>Desconto (R$)</Label>
-              <CurrencyInput value={desconto} onValueChange={setDesconto} />
+
+            <div className="flex gap-2 justify-end">
+              <Button variant="ghost" onClick={onClose}>Cancelar</Button>
+              <Button onClick={save}>{editId ? "Salvar alterações" : "Registrar venda"}</Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
 
-          <div className="rounded-md border border-border bg-accent/30 px-4 py-3 space-y-1">
-            <div className="flex justify-between text-sm text-muted-foreground"><span>Subtotal</span><span className="tabular-nums">{brl(subtotal)}</span></div>
-            <div className="flex justify-between text-sm text-muted-foreground"><span>Desconto</span><span className="tabular-nums">- {brl(desconto)}</span></div>
-            <div className="flex justify-between font-semibold text-lg pt-1 border-t border-border"><span>Valor Total</span><span className="tabular-nums text-primary">{brl(total)}</span></div>
-          </div>
-
-          <div className="flex gap-2 justify-end">
-            <Button variant="ghost" onClick={onClose}>Cancelar</Button>
-            <Button onClick={save}>{editId ? "Salvar alterações" : "Registrar venda"}</Button>
-          </div>
-        </div>
-      </DialogContent>
-
+      {/* Modal de cadastro rápido de novo cliente */}
       <Dialog open={novoOpen} onOpenChange={setNovoOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent
+          className="max-w-md z-[60]"
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => {
+            e.stopPropagation();
+            setNovoOpen(false);
+          }}
+        >
           <DialogHeader><DialogTitle>Novo cliente</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1.5">
@@ -704,8 +714,8 @@ function VendaDialog({ open, onClose, clientes, produtosUsados, produtosCadastra
               <Input value={novoDoc} onChange={(e) => setNovoDoc(e.target.value)} />
             </div>
             <div className="flex gap-2 justify-end">
-              <Button variant="ghost" onClick={() => setNovoOpen(false)}>Cancelar</Button>
-              <Button onClick={criarCliente} disabled={salvandoCliente}>
+              <Button variant="ghost" type="button" onClick={() => setNovoOpen(false)}>Cancelar</Button>
+              <Button type="button" onClick={criarCliente} disabled={salvandoCliente}>
                 {salvandoCliente ? "Salvando..." : "Cadastrar e usar"}
               </Button>
             </div>
@@ -713,8 +723,16 @@ function VendaDialog({ open, onClose, clientes, produtosUsados, produtosCadastra
         </DialogContent>
       </Dialog>
 
+      {/* Modal de cadastro rápido de novo produto */}
       <Dialog open={novoProdOpen} onOpenChange={setNovoProdOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent
+          className="max-w-md z-[60]"
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => {
+            e.stopPropagation();
+            setNovoProdOpen(false);
+          }}
+        >
           <DialogHeader><DialogTitle>Novo produto</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1.5">
@@ -741,14 +759,14 @@ function VendaDialog({ open, onClose, clientes, produtosUsados, produtosCadastra
               <Textarea value={npObs} onChange={(e) => setNpObs(e.target.value)} rows={3} />
             </div>
             <div className="flex gap-2 justify-end">
-              <Button variant="ghost" onClick={() => setNovoProdOpen(false)}>Cancelar</Button>
-              <Button onClick={criarProduto} disabled={salvandoProd}>
+              <Button variant="ghost" type="button" onClick={() => setNovoProdOpen(false)}>Cancelar</Button>
+              <Button type="button" onClick={criarProduto} disabled={salvandoProd}>
                 {salvandoProd ? "Salvando..." : "Cadastrar e usar"}
               </Button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
-    </Dialog>
+    </>
   );
 }
