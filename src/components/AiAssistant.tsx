@@ -14,9 +14,9 @@ export type ChatMessage = {
 };
 
 const CANDIDATE_MODELS = [
-  "gemini-1.5-flash",
   "gemini-2.0-flash",
-  "gemini-1.5-pro",
+  "gemini-2.0-flash-lite",
+  "gemini-1.5-flash",
 ];
 
 function formatGeminiContents(history: ChatMessage[], currentMessage: string) {
@@ -108,9 +108,9 @@ ${JSON.stringify(contas)}
 4. Mantenha os cálculos corretos. Se pedirem somas ou faturamentos, calcule com base nos valores numéricos dos dados fornecidos.
 `;
 
-    const geminiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+    const geminiKey = (process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || "").trim();
     if (!geminiKey) {
-      throw new Error("Chave da API do Gemini (GEMINI_API_KEY) não configurada no servidor.");
+      throw new Error("Chave da API do Gemini (GEMINI_API_KEY) não configurada. Insira sua chave obtida no Google AI Studio (https://aistudio.google.com/app/apikey) no arquivo backend/.env.");
     }
 
     const contents = formatGeminiContents(history, message);
@@ -122,7 +122,7 @@ ${JSON.stringify(contas)}
       contents,
     };
 
-    let lastError: Error | null = null;
+    let lastErrorText = "";
     let aiText = "";
 
     for (const modelName of CANDIDATE_MODELS) {
@@ -137,28 +137,31 @@ ${JSON.stringify(contas)}
         if (response.ok) {
           const resJson = await response.json() as any;
           aiText = resJson?.candidates?.[0]?.content?.parts?.[0]?.text || "Desculpe, não consegui processar a resposta.";
-          lastError = null;
+          lastErrorText = "";
           break;
         } else {
           const errText = await response.text();
           console.warn(`[AiAssistant serverFn] Erro no modelo ${modelName} (${response.status}): ${errText}`);
-          lastError = new Error(`Erro na API do Gemini (${modelName}): ${errText}`);
+          lastErrorText = errText;
 
-          if (response.status === 400 || response.status === 401 || response.status === 403) {
-            throw lastError;
+          if (response.status === 401 || response.status === 403) {
+            break;
           }
         }
       } catch (err: any) {
         console.warn(`[AiAssistant serverFn] Exceção ao chamar ${modelName}:`, err.message);
-        lastError = err;
-        if (err.message?.includes("400") || err.message?.includes("401") || err.message?.includes("403")) {
-          throw err;
-        }
+        lastErrorText = err.message;
       }
     }
 
-    if (lastError && !aiText) {
-      throw lastError;
+    if (!aiText) {
+      let friendlyError = "Falha na comunicação com a API do Gemini.";
+      if (lastErrorText.includes("NOT_FOUND") || lastErrorText.includes("404") || lastErrorText.includes("API key not valid")) {
+        friendlyError = "A chave da API do Gemini informada é inválida ou não possui permissão. Verifique a GEMINI_API_KEY no arquivo backend/.env (obtenha em https://aistudio.google.com/app/apikey).";
+      } else if (lastErrorText) {
+        friendlyError = `Erro da API do Gemini: ${lastErrorText}`;
+      }
+      throw new Error(friendlyError);
     }
 
     return { text: aiText };
