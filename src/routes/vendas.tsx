@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -400,6 +400,19 @@ function VendaDialog({ open, onClose, clientes, produtosUsados, produtosCadastra
   const fecharNovoProduto = () => {
     setNovoProdOpen(false);
   };
+
+  useEffect(() => {
+    if (!novoOpen && !novoProdOpen) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        if (novoOpen) setNovoOpen(false);
+        else if (novoProdOpen) setNovoProdOpen(false);
+      }
+    };
+    document.addEventListener("keydown", handler, true);
+    return () => document.removeEventListener("keydown", handler, true);
+  }, [novoOpen, novoProdOpen]);
 
   const criarProduto = async () => {
     if (!npNome.trim()) return toast.error("Informe o nome do produto");
