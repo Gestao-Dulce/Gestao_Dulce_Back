@@ -15,7 +15,7 @@ import { brl, dataBR, hoje } from "@/lib/format";
 import { normalizar } from "@/lib/utils";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Trash2, Pencil, Printer, UserPlus, PackagePlus, CheckCircle } from "lucide-react";
+import { Plus, Trash2, Pencil, Printer, UserPlus, PackagePlus, CheckCircle, X } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
@@ -542,30 +542,8 @@ function VendaDialog({ open, onClose, clientes, produtosUsados, produtosCadastra
 
   return (
     <>
-      <Dialog
-        open={open}
-        onOpenChange={(o) => {
-          if (!o) {
-            if (isSubDialogOpenRef.current || novoOpen || novoProdOpen) {
-              return;
-            }
-            onClose();
-          }
-        }}
-      >
-        <DialogContent
-          className="max-w-3xl max-h-[90vh] overflow-y-auto"
-          onPointerDownOutside={(e) => {
-            if (isSubDialogOpenRef.current || novoOpen || novoProdOpen) {
-              e.preventDefault();
-            }
-          }}
-          onInteractOutside={(e) => {
-            if (isSubDialogOpenRef.current || novoOpen || novoProdOpen) {
-              e.preventDefault();
-            }
-          }}
-        >
+      <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{editId ? "Editar venda" : "Nova venda"}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
@@ -578,7 +556,7 @@ function VendaDialog({ open, onClose, clientes, produtosUsados, produtosCadastra
                       {clientes.map((c) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
                     </SelectContent>
                   </Select>
-                  <Button type="button" variant="outline" size="icon" title="Novo cliente" onClick={abrirNovoCliente}>
+                  <Button type="button" variant="outline" size="icon" title="Novo cliente" onClick={() => setNovoOpen(true)}>
                     <UserPlus className="size-4" />
                   </Button>
                 </div>
@@ -610,7 +588,6 @@ function VendaDialog({ open, onClose, clientes, produtosUsados, produtosCadastra
                 )}
                 {itens.map((i) => (
                   <div key={i.id} className="flex flex-col gap-2 p-3 border rounded-lg md:grid md:grid-cols-[1fr_90px_110px_120px_40px_40px] md:gap-2 md:items-center md:p-0 md:border-0">
-                    {/* Select on product: always present */}
                     <div className="flex-1 min-w-0">
                       <Label className="text-[10px] uppercase text-muted-foreground md:hidden mb-1 block">Produto</Label>
                       <Select value={i.produto} onValueChange={(v) => aplicarProdutoCadastrado(i.id, v)}>
@@ -630,7 +607,6 @@ function VendaDialog({ open, onClose, clientes, produtosUsados, produtosCadastra
                       </Select>
                     </div>
                     
-                    {/* Desktop elements - hidden on mobile */}
                     <div className="hidden md:block">
                       <Input type="number" step="0.01" min="0" placeholder="Qtd" value={i.quantidade} onChange={(e) => updItem(i.id, { quantidade: Number(e.target.value) })} />
                     </div>
@@ -646,13 +622,12 @@ function VendaDialog({ open, onClose, clientes, produtosUsados, produtosCadastra
                       <CurrencyInput value={i.valor_unitario} onValueChange={(n) => updItem(i.id, { valor_unitario: n })} />
                     </div>
                     <div className="hidden md:flex justify-center">
-                      <Button size="icon" variant="ghost" title="Cadastrar novo produto" onClick={() => abrirNovoProduto(i.id)}><PackagePlus className="size-4" /></Button>
+                      <Button size="icon" variant="ghost" title="Cadastrar novo produto" onClick={() => { setNovoProdItemId(i.id); setNpNome(""); setNpObs(""); setNpUnidade("unidade"); setNpValor(0); setNovoProdOpen(true); }}><PackagePlus className="size-4" /></Button>
                     </div>
                     <div className="hidden md:flex justify-center">
                       <Button size="icon" variant="ghost" onClick={() => delItem(i.id)}><Trash2 className="size-4" /></Button>
                     </div>
 
-                    {/* Mobile inputs - hidden on desktop */}
                     <div className="grid grid-cols-2 gap-2 md:hidden pt-1 border-t border-dashed border-border mt-1">
                       <div className="space-y-1">
                         <Label className="text-[10px] uppercase text-muted-foreground">Qtd</Label>
@@ -672,7 +647,7 @@ function VendaDialog({ open, onClose, clientes, produtosUsados, produtosCadastra
                         <CurrencyInput value={i.valor_unitario} onValueChange={(n) => updItem(i.id, { valor_unitario: n })} />
                       </div>
                       <div className="flex items-end justify-end gap-1 pb-1">
-                        <Button type="button" variant="outline" size="sm" className="h-9 px-2 text-xs" title="Cadastrar produto" onClick={() => abrirNovoProduto(i.id)}><PackagePlus className="size-3.5 mr-1" /> Novo</Button>
+                        <Button type="button" variant="outline" size="sm" className="h-9 px-2 text-xs" title="Cadastrar produto" onClick={() => { setNovoProdItemId(i.id); setNpNome(""); setNpObs(""); setNpUnidade("unidade"); setNpValor(0); setNovoProdOpen(true); }}><PackagePlus className="size-3.5 mr-1" /> Novo</Button>
                         <Button type="button" variant="destructive" size="icon" className="size-9" onClick={() => delItem(i.id)}><Trash2 className="size-3.5" /></Button>
                       </div>
                     </div>
@@ -732,152 +707,108 @@ function VendaDialog({ open, onClose, clientes, produtosUsados, produtosCadastra
         </DialogContent>
       </Dialog>
 
-      {/* Modal de cadastro rápido de novo cliente */}
-      <Dialog
-        open={novoOpen}
-        onOpenChange={(v) => {
-          if (!v) fecharNovoCliente();
-        }}
-      >
-        <DialogContent
-          className="max-w-md z-[60]"
-          onClick={(e) => e.stopPropagation()}
-          onPointerDown={(e) => e.stopPropagation()}
-          onKeyDown={(e) => e.stopPropagation()}
-          onPointerDownOutside={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-          }}
-          onEscapeKeyDown={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            fecharNovoCliente();
-          }}
+      {novoOpen && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
+          onClick={() => setNovoOpen(false)}
         >
-          <DialogHeader><DialogTitle>Novo cliente</DialogTitle></DialogHeader>
-          <div className="space-y-3">
-            <div className="space-y-1.5">
-              <Label>Nome / Razão social</Label>
-              <Input value={novoNome} onChange={(e) => setNovoNome(e.target.value)} autoFocus />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Contato</Label>
-              <Input value={novoContato} onChange={(e) => setNovoContato(e.target.value)} placeholder="Telefone, email..." />
-            </div>
-            <div className="space-y-1.5">
-              <Label>CPF / CNPJ</Label>
-              <Input value={novoDoc} onChange={(e) => setNovoDoc(e.target.value)} />
-            </div>
-            <div className="flex gap-2 justify-end">
+          <Card
+            className="w-full max-w-md bg-card border shadow-2xl space-y-4 p-5 animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b pb-3">
+              <h3 className="font-semibold text-lg">Novo cliente</h3>
               <Button
                 variant="ghost"
-                type="button"
-                onPointerDown={(e) => e.stopPropagation()}
-                onMouseDown={(e) => e.stopPropagation()}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  fecharNovoCliente();
-                }}
+                size="icon"
+                className="size-8 rounded-full"
+                onClick={() => setNovoOpen(false)}
               >
+                <X className="size-4" />
+              </Button>
+            </div>
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label>Nome / Razão social</Label>
+                <Input value={novoNome} onChange={(e) => setNovoNome(e.target.value)} autoFocus />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Contato</Label>
+                <Input value={novoContato} onChange={(e) => setNovoContato(e.target.value)} placeholder="Telefone, email..." />
+              </div>
+              <div className="space-y-1.5">
+                <Label>CPF / CNPJ</Label>
+                <Input value={novoDoc} onChange={(e) => setNovoDoc(e.target.value)} />
+              </div>
+            </div>
+            <div className="flex gap-2 justify-end pt-2 border-t">
+              <Button variant="ghost" type="button" onClick={() => setNovoOpen(false)}>
                 Cancelar
               </Button>
-              <Button
-                type="button"
-                onPointerDown={(e) => e.stopPropagation()}
-                onMouseDown={(e) => e.stopPropagation()}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  criarCliente();
-                }}
-                disabled={salvandoCliente}
-              >
+              <Button type="button" onClick={criarCliente} disabled={salvandoCliente}>
                 {salvandoCliente ? "Salvando..." : "Cadastrar e usar"}
               </Button>
             </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+          </Card>
+        </div>
+      )}
 
-      {/* Modal de cadastro rápido de novo produto */}
-      <Dialog
-        open={novoProdOpen}
-        onOpenChange={(v) => {
-          if (!v) fecharNovoProduto();
-        }}
-      >
-        <DialogContent
-          className="max-w-md z-[60]"
-          onClick={(e) => e.stopPropagation()}
-          onPointerDown={(e) => e.stopPropagation()}
-          onKeyDown={(e) => e.stopPropagation()}
-          onPointerDownOutside={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-          }}
-          onEscapeKeyDown={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            fecharNovoProduto();
-          }}
+      {novoProdOpen && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
+          onClick={() => setNovoProdOpen(false)}
         >
-          <DialogHeader><DialogTitle>Novo produto</DialogTitle></DialogHeader>
-          <div className="space-y-3">
-            <div className="space-y-1.5">
-              <Label>Nome</Label>
-              <Input value={npNome} onChange={(e) => setNpNome(e.target.value)} autoFocus />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label>Unidade</Label>
-                <Select value={npUnidade} onValueChange={setNpUnidade}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {UNIDADES.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label>Valor (R$)</Label>
-                <CurrencyInput value={npValor} onValueChange={setNpValor} />
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Observação</Label>
-              <Textarea value={npObs} onChange={(e) => setNpObs(e.target.value)} rows={3} />
-            </div>
-            <div className="flex gap-2 justify-end">
+          <Card
+            className="w-full max-w-md bg-card border shadow-2xl space-y-4 p-5 animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b pb-3">
+              <h3 className="font-semibold text-lg">Novo produto</h3>
               <Button
                 variant="ghost"
-                type="button"
-                onPointerDown={(e) => e.stopPropagation()}
-                onMouseDown={(e) => e.stopPropagation()}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  fecharNovoProduto();
-                }}
+                size="icon"
+                className="size-8 rounded-full"
+                onClick={() => setNovoProdOpen(false)}
               >
+                <X className="size-4" />
+              </Button>
+            </div>
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label>Nome</Label>
+                <Input value={npNome} onChange={(e) => setNpNome(e.target.value)} autoFocus />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label>Unidade</Label>
+                  <Select value={npUnidade} onValueChange={setNpUnidade}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {UNIDADES.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Valor (R$)</Label>
+                  <CurrencyInput value={npValor} onValueChange={setNpValor} />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Observação</Label>
+                <Textarea value={npObs} onChange={(e) => setNpObs(e.target.value)} rows={3} />
+              </div>
+            </div>
+            <div className="flex gap-2 justify-end pt-2 border-t">
+              <Button variant="ghost" type="button" onClick={() => setNovoProdOpen(false)}>
                 Cancelar
               </Button>
-              <Button
-                type="button"
-                onPointerDown={(e) => e.stopPropagation()}
-                onMouseDown={(e) => e.stopPropagation()}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  criarProduto();
-                }}
-                disabled={salvandoProd}
-              >
+              <Button type="button" onClick={criarProduto} disabled={salvandoProd}>
                 {salvandoProd ? "Salvando..." : "Cadastrar e usar"}
               </Button>
             </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+          </Card>
+        </div>
+      )}
     </>
   );
 }
