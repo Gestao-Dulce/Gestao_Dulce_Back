@@ -8,9 +8,9 @@ const router = Router();
 router.use(requireAuth);
 
 const CANDIDATE_MODELS = [
+  "gemini-flash-latest",
+  "gemini-flash-lite-latest",
   "gemini-2.0-flash",
-  "gemini-2.0-flash-lite",
-  "gemini-1.5-flash",
 ];
 
 function formatGeminiContents(history: any[], currentMessage: string) {
@@ -154,8 +154,8 @@ ${JSON.stringify(contas)}
 
     if (!aiText) {
       let friendlyError = "Falha na comunicação com a API do Gemini.";
-      if (lastErrorText.includes("NOT_FOUND") || lastErrorText.includes("404") || lastErrorText.includes("API key not valid")) {
-        friendlyError = "A chave da API do Gemini informada é inválida ou não possui permissão para acessar os modelos. Verifique a GEMINI_API_KEY no seu arquivo backend/.env (obtenha uma nova chave em https://aistudio.google.com/app/apikey).";
+      if (lastErrorText.includes("API_KEY_INVALID") || lastErrorText.includes("API key not valid")) {
+        friendlyError = "A chave da API do Gemini informada é inválida ou não possui permissão. Verifique a GEMINI_API_KEY no seu arquivo backend/.env (obtenha em https://aistudio.google.com/app/apikey).";
       } else if (lastErrorText) {
         friendlyError = `Erro da API do Gemini: ${lastErrorText}`;
       }
