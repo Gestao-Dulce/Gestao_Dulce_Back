@@ -14,10 +14,9 @@ export type ChatMessage = {
 };
 
 const CANDIDATE_MODELS = [
-  "gemini-2.0-flash",
   "gemini-1.5-flash",
+  "gemini-2.0-flash",
   "gemini-1.5-pro",
-  "gemini-1.0-pro",
 ];
 
 function formatGeminiContents(history: ChatMessage[], currentMessage: string) {
@@ -117,7 +116,7 @@ ${JSON.stringify(contas)}
     const contents = formatGeminiContents(history, message);
 
     const payload = {
-      systemInstruction: {
+      system_instruction: {
         parts: [{ text: systemPromptText }],
       },
       contents,
@@ -144,10 +143,17 @@ ${JSON.stringify(contas)}
           const errText = await response.text();
           console.warn(`[AiAssistant serverFn] Erro no modelo ${modelName} (${response.status}): ${errText}`);
           lastError = new Error(`Erro na API do Gemini (${modelName}): ${errText}`);
+
+          if (response.status === 400 || response.status === 401 || response.status === 403) {
+            throw lastError;
+          }
         }
       } catch (err: any) {
         console.warn(`[AiAssistant serverFn] Exceção ao chamar ${modelName}:`, err.message);
         lastError = err;
+        if (err.message?.includes("400") || err.message?.includes("401") || err.message?.includes("403")) {
+          throw err;
+        }
       }
     }
 

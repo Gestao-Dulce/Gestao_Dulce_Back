@@ -8,10 +8,9 @@ const router = Router();
 router.use(requireAuth);
 
 const CANDIDATE_MODELS = [
-  "gemini-2.0-flash",
   "gemini-1.5-flash",
+  "gemini-2.0-flash",
   "gemini-1.5-pro",
-  "gemini-1.0-pro",
 ];
 
 function formatGeminiContents(history: any[], currentMessage: string) {
@@ -113,7 +112,7 @@ ${JSON.stringify(contas)}
     const contents = formatGeminiContents(history, message);
 
     const payload = {
-      systemInstruction: {
+      system_instruction: {
         parts: [{ text: systemPromptText }],
       },
       contents,
@@ -140,10 +139,18 @@ ${JSON.stringify(contas)}
           const errText = await response.text();
           console.warn(`[AI Route] Erro no modelo ${modelName} (${response.status}): ${errText}`);
           lastError = new Error(`Erro na API do Gemini (${modelName}): ${errText}`);
+
+          // Se for erro de validação (400) ou credenciais (401/403), lança imediatamente para mostrar a mensagem real ao usuário
+          if (response.status === 400 || response.status === 401 || response.status === 403) {
+            throw lastError;
+          }
         }
       } catch (err: any) {
         console.warn(`[AI Route] Exceção ao chamar modelo ${modelName}:`, err.message);
         lastError = err;
+        if (err.message?.includes("400") || err.message?.includes("401") || err.message?.includes("403")) {
+          throw err;
+        }
       }
     }
 
