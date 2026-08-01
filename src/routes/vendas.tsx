@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -372,7 +372,6 @@ function VendaDialog({ open, onClose, clientes, produtosUsados, produtosCadastra
   open: boolean; onClose: () => void; clientes: any[]; produtosUsados: string[]; produtosCadastrados: any[]; editId: string | null; onSaved: () => void;
 }) {
   const qc = useQueryClient();
-  const isSubDialogOpenRef = useRef(false);
   const [cliente, setCliente] = useState("");
   const [forma, setForma] = useState<"dinheiro" | "pix" | "cartao" | "boleto" | "faturado">("pix");
   const [data, setData] = useState(hoje());
@@ -394,30 +393,12 @@ function VendaDialog({ open, onClose, clientes, produtosUsados, produtosCadastra
   const [npValor, setNpValor] = useState(0);
   const [salvandoProd, setSalvandoProd] = useState(false);
 
-  const abrirNovoCliente = () => {
-    isSubDialogOpenRef.current = true;
-    setNovoOpen(true);
-  };
-
   const fecharNovoCliente = () => {
     setNovoOpen(false);
-    setTimeout(() => {
-      isSubDialogOpenRef.current = false;
-    }, 300);
-  };
-
-  const abrirNovoProduto = (itemId: string) => {
-    isSubDialogOpenRef.current = true;
-    setNovoProdItemId(itemId);
-    setNpNome(""); setNpObs(""); setNpUnidade("unidade"); setNpValor(0);
-    setNovoProdOpen(true);
   };
 
   const fecharNovoProduto = () => {
     setNovoProdOpen(false);
-    setTimeout(() => {
-      isSubDialogOpenRef.current = false;
-    }, 300);
   };
 
   const criarProduto = async () => {
@@ -542,8 +523,21 @@ function VendaDialog({ open, onClose, clientes, produtosUsados, produtosCadastra
 
   return (
     <>
-      <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <Dialog open={open} onOpenChange={(o) => {
+        if (!o && !novoOpen && !novoProdOpen) onClose();
+      }}>
+        <DialogContent
+          className="max-w-3xl max-h-[90vh] overflow-y-auto"
+          onPointerDownOutside={(e) => {
+            if (novoOpen || novoProdOpen) e.preventDefault();
+          }}
+          onInteractOutside={(e) => {
+            if (novoOpen || novoProdOpen) e.preventDefault();
+          }}
+          onEscapeKeyDown={(e) => {
+            if (novoOpen || novoProdOpen) e.preventDefault();
+          }}
+        >
           <DialogHeader><DialogTitle>{editId ? "Editar venda" : "Nova venda"}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
