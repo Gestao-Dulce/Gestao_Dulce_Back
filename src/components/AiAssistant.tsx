@@ -147,14 +147,25 @@ ${dadosExternos ? `- Integração de API Externa Customizada: ${JSON.stringify(d
     for (const modelName of CANDIDATE_MODELS) {
       try {
         const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${geminiKey}`;
-        const response = await fetch(geminiUrl, {
+        let response = await fetch(geminiUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
 
+        // Se falhar (ex: 429 por cota de busca ou incompatibilidade de ferramentas), tenta sem a propriedade tools
+        if (!response.ok && payload.tools && response.status !== 401 && response.status !== 403) {
+          const payloadNoTools = { ...payload };
+          delete (payloadNoTools as any).tools;
+          response = await fetch(geminiUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payloadNoTools),
+          });
+        }
+
         if (response.ok) {
-          const resJson = await response.json() as any;
+          const resJson = (await response.json()) as any;
           aiText = resJson?.candidates?.[0]?.content?.parts?.[0]?.text || "Desculpe, não consegui processar a resposta.";
           lastErrorText = "";
           break;
@@ -177,6 +188,8 @@ ${dadosExternos ? `- Integração de API Externa Customizada: ${JSON.stringify(d
       let friendlyError = "Falha na comunicação com a API do Gemini.";
       if (lastErrorText.includes("API_KEY_INVALID") || lastErrorText.includes("API key not valid")) {
         friendlyError = "A chave da API do Gemini informada é inválida ou não possui permissão. Verifique a GEMINI_API_KEY no arquivo backend/.env (obtenha em https://aistudio.google.com/app/apikey).";
+      } else if (lastErrorText.includes("429") || lastErrorText.includes("RESOURCE_EXHAUSTED") || lastErrorText.includes("Quota exceeded")) {
+        friendlyError = "O limite temporário de requisições por minuto da versão gratuita do Gemini foi atingido. Por favor, aguarde alguns segundos e tente novamente.";
       } else if (lastErrorText) {
         friendlyError = `Erro da API do Gemini: ${lastErrorText}`;
       }
