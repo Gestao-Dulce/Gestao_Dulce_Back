@@ -347,7 +347,9 @@ export function AiAssistant() {
         <Card className="w-[360px] sm:w-[420px] h-[500px] mb-4 flex flex-col shadow-2xl border-primary/20 animate-in fade-in slide-in-from-bottom-6 duration-300">
           <CardHeader className="bg-primary text-primary-foreground py-3 px-4 flex flex-row items-center justify-between rounded-t-lg">
             <div className="flex items-center gap-2">
-              <Cookie className="size-5 text-amber-300 animate-pulse" />
+              <div className="size-7 rounded-full bg-white p-0.5 border border-primary-foreground/30 flex items-center justify-center shrink-0 shadow-sm">
+                <img src="/lulu-avatar.png" alt="Lulu" className="size-full object-contain" />
+              </div>
               <div>
                 <CardTitle className="text-sm font-semibold">Lulu — Assistente de Doces</CardTitle>
                 <span className="text-[10px] opacity-80 block">Online</span>
@@ -366,7 +368,9 @@ export function AiAssistant() {
           <CardContent className="flex-1 overflow-y-auto p-4 space-y-3 bg-muted/20">
             {messages.length === 0 && (
               <div className="text-center py-8 space-y-2">
-                <Cookie className="size-10 mx-auto text-amber-500 animate-bounce" />
+                <div className="size-16 mx-auto rounded-full bg-white p-1.5 shadow-md border-2 border-primary/30 flex items-center justify-center animate-bounce">
+                  <img src="/lulu-avatar.png" alt="Lulu" className="size-full object-contain" />
+                </div>
                 <p className="text-xs font-semibold text-foreground">Olá! Sou a Lulu, assistente da Doces Lucelian.</p>
                 <p className="text-[11px] text-muted-foreground max-w-[80%] mx-auto">
                   Pergunte-me qualquer coisa sobre vendas, produtos cadastrados, contas a pagar e clientes!
@@ -384,11 +388,15 @@ export function AiAssistant() {
               >
                 <div
                   className={cn(
-                    "size-7 rounded-full flex items-center justify-center shrink-0 text-white text-xs",
-                    msg.role === "user" ? "bg-primary" : "bg-amber-600"
+                    "size-7 rounded-full flex items-center justify-center shrink-0 text-white text-xs overflow-hidden shadow-sm",
+                    msg.role === "user" ? "bg-primary" : "bg-white border border-primary/20 p-0.5"
                   )}
                 >
-                  {msg.role === "user" ? <User className="size-4" /> : <Cookie className="size-4" />}
+                  {msg.role === "user" ? (
+                    <User className="size-4" />
+                  ) : (
+                    <img src="/lulu-avatar.png" alt="Lulu" className="size-full object-contain" />
+                  )}
                 </div>
                 <div
                   className={cn(
@@ -405,8 +413,8 @@ export function AiAssistant() {
 
             {loading && (
               <div className="flex gap-2 mr-auto max-w-[85%] items-center">
-                <div className="size-7 rounded-full flex items-center justify-center shrink-0 bg-amber-600 text-white">
-                  <Cookie className="size-4 animate-spin" />
+                <div className="size-7 rounded-full flex items-center justify-center shrink-0 bg-white border border-primary/20 p-0.5 shadow-sm">
+                  <img src="/lulu-avatar.png" alt="Lulu" className="size-full object-contain animate-pulse" />
                 </div>
                 <div className="bg-card text-foreground p-3 rounded-lg border border-border rounded-tl-none shadow-sm flex items-center gap-2">
                   <Loader2 className="size-4 animate-spin text-primary" />
@@ -453,12 +461,16 @@ export function AiAssistant() {
         id="tour-ai-chat"
         size="icon"
         className={cn(
-          "size-14 rounded-full shadow-2xl cursor-pointer transition-transform hover:scale-105 duration-300",
-          open ? "bg-zinc-600 hover:bg-zinc-700" : "bg-primary hover:bg-primary/90"
+          "size-14 rounded-full shadow-2xl cursor-pointer transition-transform hover:scale-105 duration-300 p-0 overflow-hidden",
+          open ? "bg-zinc-600 hover:bg-zinc-700" : "bg-white hover:bg-zinc-100 border-2 border-primary"
         )}
         onClick={() => setOpen(!open)}
       >
-        {open ? <X className="size-6" /> : <Cookie className="size-6 animate-pulse" />}
+        {open ? (
+          <X className="size-6 text-white" />
+        ) : (
+          <img src="/lulu-avatar.png" alt="Lulu" className="size-full object-contain p-1 animate-pulse" />
+        )}
       </Button>
     </div>
   );
