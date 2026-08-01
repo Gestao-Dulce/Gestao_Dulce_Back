@@ -64,18 +64,24 @@ router.post("/chat", async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    // 1. Carregar dados das tabelas em paralelo com tratamento de exceções
-    const [clientesRes, produtosRes, vendasRes, contasRes] = await Promise.all([
+    // 1. Carregar dados das tabelas e fontes externas em paralelo com resiliência
+    const [clientesRes, produtosRes, vendasRes, contasRes, cotacoesRes, customExternalRes] = await Promise.allSettled([
       supabase.from("clientes").select("nome, cpf_cnpj, contato, cidade, bairro"),
       supabase.from("produtos").select("nome, unidade, valor, observacao"),
       supabase.from("vendas").select("data, valor_total, status_pagamento, forma_pagamento, nota_fiscal, clientes(nome), venda_itens(produto, quantidade, valor_unitario, unidade)"),
       supabase.from("contas_a_pagar").select("fornecedor, categoria, descricao, vencimento, valor, status, recorrente"),
+      fetch("https://economia.awesomeapi.com.br/last/USD-BRL,EUR-BRL").then((r) => (r.ok ? r.json() : null)).catch(() => null),
+      process.env.EXTERNAL_DATA_API_URL
+        ? fetch(process.env.EXTERNAL_DATA_API_URL).then((r) => (r.ok ? r.json() : null)).catch(() => null)
+        : Promise.resolve(null),
     ]);
 
-    const clientes = clientesRes.data ?? [];
-    const produtos = produtosRes.data ?? [];
-    const vendas = vendasRes.data ?? [];
-    const contas = contasRes.data ?? [];
+    const clientes = clientesRes.status === "fulfilled" && clientesRes.value.data ? clientesRes.value.data : [];
+    const produtos = produtosRes.status === "fulfilled" && produtosRes.value.data ? produtosRes.value.data : [];
+    const vendas = vendasRes.status === "fulfilled" && vendasRes.value.data ? vendasRes.value.data : [];
+    const contas = contasRes.status === "fulfilled" && contasRes.value.data ? contasRes.value.data : [];
+    const cotacoes = cotacoesRes.status === "fulfilled" ? cotacoesRes.value : null;
+    const dadosExternos = customExternalRes.status === "fulfilled" ? customExternalRes.value : null;
 
     const dataAtual = new Date().toLocaleDateString("pt-BR", {
       day: "2-digit",
@@ -85,11 +91,11 @@ router.post("/chat", async (req: Request, res: Response): Promise<void> => {
 
     const systemPromptText = `
 Você é o assistente inteligente da fábrica de doces **Doces Lucelian (Lucelian Sweet Flow)**.
-Sua missão é ajudar o administrador respondendo perguntas de forma concisa, educada e direta baseando-se estritamente nos dados reais fornecidos abaixo.
+Sua missão é ajudar o administrador respondendo perguntas de forma concisa, educada e direta baseando-se tanto nos dados do sistema interno quanto em fontes externas.
 Utilize formatação Markdown para deixar as respostas organizadas (listas, negritos e tabelas curtas são recomendados).
 
 ---
-### DADOS REAIS DO SISTEMA (Atualizados em: ${dataAtual})
+### DADOS REAIS DO SISTEMA INTERNO (Atualizados em: ${dataAtual})
 
 #### Clientes Cadastrados:
 ${JSON.stringify(clientes)}
@@ -102,13 +108,25 @@ ${JSON.stringify(vendas)}
 
 #### Contas a Pagar (Despesas/Compromissos):
 ${JSON.stringify(contas)}
+
+---
+### DADOS E COTAÇÕES EXTERNAS EM TEMPO REAL:
+- Cotações Financeiras de Moedas: ${JSON.stringify(cotacoes ?? "Indisponível no momento")}
+${dadosExternos ? `- Integração de API Externa Customizada: ${JSON.stringify(dadosExternos)}` : ""}
 ---
 
 ### REGRAS E DIRETRIZES:
-1. Responda em Português do Brasil (pt-BR).
-2. Se a informação solicitada não puder ser deduzida dos dados fornecidos, responda educadamente que não possui essa informação em sua base de dados atual.
-3. Se perguntarem sobre usuários do sistema, logins, senhas ou credenciais, diga que por motivos de segurança você não tem acesso a essas informações de contas.
-4. Mantenha os cálculos corretos. Se pedirem somas ou faturamentos, calcule com base nos valores numéricos dos dados fornecidos.
+1. Responda em Português do Brasil (pt-BR) de forma amigável, clara e objetiva.
+2. **Perguntas Genéricas & Buscas na Web (Google Search)**:
+   - Você é um assistente completo e prestativo. Responda a **QUALQUER pergunta genérica** feita pelo usuário (sobre receitas, dicas de negócios, culinária, história, curiosidades, notícias atuais, clima ou conhecimentos gerais).
+   - Utilize a busca na web (Google Search) sempre que precisar de dados atualizados ou informações do mundo real para responder com precisão.
+3. **Comparação de Preços com a Internet/Mercado**:
+   - Quando perguntado sobre comparativo de preços ou mercado, consulte os valores dos produtos cadastrados e pesquise as médias da internet para montar tabelas comparativas.
+4. **Dados Internos do Sistema**:
+   - Para perguntas sobre faturamento, vendas, clientes cadastrados, produtos da fábrica ou contas a pagar, consulte os dados fornecidos nas tabelas internas acima.
+5. **Segurança de Credenciais**:
+   - Se perguntarem sobre logins, senhas ou credenciais de usuários, informe educadamente que por motivos de segurança você não possui acesso às senhas de contas.
+6. Mantenha os cálculos numéricos precisos e utilize formatação Markdown (listas, negritos e tabelas).
 `;
 
     const contents = formatGeminiContents(history, message);
@@ -118,6 +136,7 @@ ${JSON.stringify(contas)}
         parts: [{ text: systemPromptText }],
       },
       contents,
+      tools: [{ googleSearch: {} }],
     };
 
     let lastErrorText = "";
