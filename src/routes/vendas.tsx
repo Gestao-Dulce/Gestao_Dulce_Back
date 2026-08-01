@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -372,6 +372,7 @@ function VendaDialog({ open, onClose, clientes, produtosUsados, produtosCadastra
   open: boolean; onClose: () => void; clientes: any[]; produtosUsados: string[]; produtosCadastrados: any[]; editId: string | null; onSaved: () => void;
 }) {
   const qc = useQueryClient();
+  const isSubDialogOpenRef = useRef(false);
   const [cliente, setCliente] = useState("");
   const [forma, setForma] = useState<"dinheiro" | "pix" | "cartao" | "boleto" | "faturado">("pix");
   const [data, setData] = useState(hoje());
@@ -393,10 +394,30 @@ function VendaDialog({ open, onClose, clientes, produtosUsados, produtosCadastra
   const [npValor, setNpValor] = useState(0);
   const [salvandoProd, setSalvandoProd] = useState(false);
 
+  const abrirNovoCliente = () => {
+    isSubDialogOpenRef.current = true;
+    setNovoOpen(true);
+  };
+
+  const fecharNovoCliente = () => {
+    setNovoOpen(false);
+    setTimeout(() => {
+      isSubDialogOpenRef.current = false;
+    }, 300);
+  };
+
   const abrirNovoProduto = (itemId: string) => {
+    isSubDialogOpenRef.current = true;
     setNovoProdItemId(itemId);
     setNpNome(""); setNpObs(""); setNpUnidade("unidade"); setNpValor(0);
     setNovoProdOpen(true);
+  };
+
+  const fecharNovoProduto = () => {
+    setNovoProdOpen(false);
+    setTimeout(() => {
+      isSubDialogOpenRef.current = false;
+    }, 300);
   };
 
   const criarProduto = async () => {
@@ -415,7 +436,7 @@ function VendaDialog({ open, onClose, clientes, produtosUsados, produtosCadastra
         : i));
     }
     toast.success("Produto cadastrado");
-    setNovoProdOpen(false);
+    fecharNovoProduto();
   };
 
   const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -446,7 +467,7 @@ function VendaDialog({ open, onClose, clientes, produtosUsados, produtosCadastra
     await qc.invalidateQueries({ queryKey: ["clientes"] });
     setCliente(ins.id);
     toast.success("Cliente cadastrado");
-    setNovoOpen(false);
+    fecharNovoCliente();
     setNovoNome(""); setNovoContato(""); setNovoDoc("");
   };
 
@@ -521,7 +542,17 @@ function VendaDialog({ open, onClose, clientes, produtosUsados, produtosCadastra
 
   return (
     <>
-      <Dialog open={open} onOpenChange={(o) => !o && !novoOpen && !novoProdOpen && onClose()}>
+      <Dialog
+        open={open}
+        onOpenChange={(o) => {
+          if (!o) {
+            if (isSubDialogOpenRef.current || novoOpen || novoProdOpen) {
+              return;
+            }
+            onClose();
+          }
+        }}
+      >
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{editId ? "Editar venda" : "Nova venda"}</DialogTitle></DialogHeader>
           <div className="space-y-4">
@@ -535,7 +566,7 @@ function VendaDialog({ open, onClose, clientes, produtosUsados, produtosCadastra
                       {clientes.map((c) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
                     </SelectContent>
                   </Select>
-                  <Button type="button" variant="outline" size="icon" title="Novo cliente" onClick={() => setNovoOpen(true)}>
+                  <Button type="button" variant="outline" size="icon" title="Novo cliente" onClick={abrirNovoCliente}>
                     <UserPlus className="size-4" />
                   </Button>
                 </div>
@@ -690,13 +721,25 @@ function VendaDialog({ open, onClose, clientes, produtosUsados, produtosCadastra
       </Dialog>
 
       {/* Modal de cadastro rápido de novo cliente */}
-      <Dialog open={novoOpen} onOpenChange={setNovoOpen}>
+      <Dialog
+        open={novoOpen}
+        onOpenChange={(v) => {
+          if (!v) fecharNovoCliente();
+        }}
+      >
         <DialogContent
           className="max-w-md z-[60]"
-          onPointerDownOutside={(e) => e.preventDefault()}
-          onEscapeKeyDown={(e) => {
+          onClick={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+          onPointerDownOutside={(e) => {
+            e.preventDefault();
             e.stopPropagation();
-            setNovoOpen(false);
+          }}
+          onEscapeKeyDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            fecharNovoCliente();
           }}
         >
           <DialogHeader><DialogTitle>Novo cliente</DialogTitle></DialogHeader>
@@ -714,8 +757,24 @@ function VendaDialog({ open, onClose, clientes, produtosUsados, produtosCadastra
               <Input value={novoDoc} onChange={(e) => setNovoDoc(e.target.value)} />
             </div>
             <div className="flex gap-2 justify-end">
-              <Button variant="ghost" type="button" onClick={() => setNovoOpen(false)}>Cancelar</Button>
-              <Button type="button" onClick={criarCliente} disabled={salvandoCliente}>
+              <Button
+                variant="ghost"
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  fecharNovoCliente();
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  criarCliente();
+                }}
+                disabled={salvandoCliente}
+              >
                 {salvandoCliente ? "Salvando..." : "Cadastrar e usar"}
               </Button>
             </div>
@@ -724,13 +783,25 @@ function VendaDialog({ open, onClose, clientes, produtosUsados, produtosCadastra
       </Dialog>
 
       {/* Modal de cadastro rápido de novo produto */}
-      <Dialog open={novoProdOpen} onOpenChange={setNovoProdOpen}>
+      <Dialog
+        open={novoProdOpen}
+        onOpenChange={(v) => {
+          if (!v) fecharNovoProduto();
+        }}
+      >
         <DialogContent
           className="max-w-md z-[60]"
-          onPointerDownOutside={(e) => e.preventDefault()}
-          onEscapeKeyDown={(e) => {
+          onClick={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+          onPointerDownOutside={(e) => {
+            e.preventDefault();
             e.stopPropagation();
-            setNovoProdOpen(false);
+          }}
+          onEscapeKeyDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            fecharNovoProduto();
           }}
         >
           <DialogHeader><DialogTitle>Novo produto</DialogTitle></DialogHeader>
@@ -759,8 +830,24 @@ function VendaDialog({ open, onClose, clientes, produtosUsados, produtosCadastra
               <Textarea value={npObs} onChange={(e) => setNpObs(e.target.value)} rows={3} />
             </div>
             <div className="flex gap-2 justify-end">
-              <Button variant="ghost" type="button" onClick={() => setNovoProdOpen(false)}>Cancelar</Button>
-              <Button type="button" onClick={criarProduto} disabled={salvandoProd}>
+              <Button
+                variant="ghost"
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  fecharNovoProduto();
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  criarProduto();
+                }}
+                disabled={salvandoProd}
+              >
                 {salvandoProd ? "Salvando..." : "Cadastrar e usar"}
               </Button>
             </div>
