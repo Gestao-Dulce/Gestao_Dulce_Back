@@ -7,48 +7,82 @@ const router = Router();
 // Todas as rotas de IA exigem autenticação
 router.use(requireAuth);
 
+const CANDIDATE_MODELS = [
+  "gemini-2.0-flash",
+  "gemini-1.5-flash",
+  "gemini-1.5-pro",
+  "gemini-1.0-pro",
+];
+
+function formatGeminiContents(history: any[], currentMessage: string) {
+  const rawTurns: Array<{ role: "user" | "model"; text: string }> = [];
+
+  if (Array.isArray(history)) {
+    for (const msg of history) {
+      if (!msg || typeof msg.content !== "string" || !msg.content.trim()) continue;
+      const role = msg.role === "user" ? "user" : "model";
+      rawTurns.push({ role, text: msg.content.trim() });
+    }
+  }
+
+  rawTurns.push({ role: "user", text: currentMessage.trim() });
+
+  const contents: Array<{ role: "user" | "model"; parts: Array<{ text: string }> }> = [];
+
+  for (const turn of rawTurns) {
+    if (contents.length === 0) {
+      contents.push({ role: turn.role, parts: [{ text: turn.text }] });
+    } else {
+      const last = contents[contents.length - 1];
+      if (last.role === turn.role) {
+        last.parts[0].text += `\n${turn.text}`;
+      } else {
+        contents.push({ role: turn.role, parts: [{ text: turn.text }] });
+      }
+    }
+  }
+
+  if (contents.length > 0 && contents[0].role !== "user") {
+    contents.shift();
+  }
+
+  return contents;
+}
+
 router.post("/chat", async (req: Request, res: Response): Promise<void> => {
   try {
     const { message, history } = req.body;
-    if (!message) {
+    if (!message || typeof message !== "string" || !message.trim()) {
       res.status(400).json({ error: "Mensagem é obrigatória" });
       return;
     }
 
-    const geminiKey = process.env.GEMINI_API_KEY;
+    const geminiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
     if (!geminiKey) {
-      res.status(500).json({ error: "Chave da API do Gemini não configurada no servidor" });
+      res.status(500).json({ error: "Chave da API do Gemini (GEMINI_API_KEY) não configurada no servidor." });
       return;
     }
 
-    // 1. Carregar dados de Clientes
-    const { data: clientes } = await supabase
-      .from("clientes")
-      .select("nome, cpf_cnpj, contato, cidade, bairro");
+    // 1. Carregar dados das tabelas em paralelo com tratamento de exceções
+    const [clientesRes, produtosRes, vendasRes, contasRes] = await Promise.all([
+      supabase.from("clientes").select("nome, cpf_cnpj, contato, cidade, bairro"),
+      supabase.from("produtos").select("nome, unidade, valor, observacao"),
+      supabase.from("vendas").select("data, valor_total, status_pagamento, forma_pagamento, nota_fiscal, clientes(nome), venda_itens(produto, quantidade, valor_unitario, unidade)"),
+      supabase.from("contas_a_pagar").select("fornecedor, categoria, descricao, vencimento, valor, status, recorrente"),
+    ]);
 
-    // 2. Carregar dados de Produtos
-    const { data: produtos } = await supabase
-      .from("produtos")
-      .select("nome, unidade, valor, observacao");
+    const clientes = clientesRes.data ?? [];
+    const produtos = produtosRes.data ?? [];
+    const vendas = vendasRes.data ?? [];
+    const contas = contasRes.data ?? [];
 
-    // 3. Carregar dados de Vendas (com itens)
-    const { data: vendas } = await supabase
-      .from("vendas")
-      .select("data, valor_total, status_pagamento, forma_pagamento, nota_fiscal, clientes(nome), venda_itens(produto, quantidade, valor_unitario, unidade)");
-
-    // 4. Carregar dados de Contas a Pagar
-    const { data: contas } = await supabase
-      .from("contas_a_pagar")
-      .select("fornecedor, categoria, descricao, vencimento, valor, status, recorrente");
-
-    // Formatar data atual para contexto da IA
     const dataAtual = new Date().toLocaleDateString("pt-BR", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
     });
 
-    const contextPrompt = `
+    const systemPromptText = `
 Você é o assistente inteligente da fábrica de doces **Doces Lucelian (Lucelian Sweet Flow)**.
 Sua missão é ajudar o administrador respondendo perguntas de forma concisa, educada e direta baseando-se estritamente nos dados reais fornecidos abaixo.
 Utilize formatação Markdown para deixar as respostas organizadas (listas, negritos e tabelas curtas são recomendados).
@@ -57,16 +91,16 @@ Utilize formatação Markdown para deixar as respostas organizadas (listas, negr
 ### DADOS REAIS DO SISTEMA (Atualizados em: ${dataAtual})
 
 #### Clientes Cadastrados:
-${JSON.stringify(clientes ?? [])}
+${JSON.stringify(clientes)}
 
 #### Produtos Cadastrados:
-${JSON.stringify(produtos ?? [])}
+${JSON.stringify(produtos)}
 
 #### Histórico de Vendas Realizadas:
-${JSON.stringify(vendas ?? [])}
+${JSON.stringify(vendas)}
 
 #### Contas a Pagar (Despesas/Compromissos):
-${JSON.stringify(contas ?? [])}
+${JSON.stringify(contas)}
 ---
 
 ### REGRAS E DIRETRIZES:
@@ -76,47 +110,51 @@ ${JSON.stringify(contas ?? [])}
 4. Mantenha os cálculos corretos. Se pedirem somas ou faturamentos, calcule com base nos valores numéricos dos dados fornecidos.
 `;
 
-    // Preparar as mensagens para a API do Gemini
-    const contents = [];
+    const contents = formatGeminiContents(history, message);
 
-    // Adicionar o histórico de mensagens formatado para o Gemini
-    if (Array.isArray(history)) {
-      for (const msg of history) {
-        contents.push({
-          role: msg.role === "user" ? "user" : "model",
-          parts: [{ text: msg.content }],
+    const payload = {
+      systemInstruction: {
+        parts: [{ text: systemPromptText }],
+      },
+      contents,
+    };
+
+    let lastError: Error | null = null;
+    let aiText = "";
+
+    for (const modelName of CANDIDATE_MODELS) {
+      try {
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${geminiKey}`;
+        const response = await fetch(geminiUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
         });
+
+        if (response.ok) {
+          const resJson = (await response.json()) as any;
+          aiText = resJson?.candidates?.[0]?.content?.parts?.[0]?.text || "Desculpe, não consegui processar a resposta.";
+          lastError = null;
+          break;
+        } else {
+          const errText = await response.text();
+          console.warn(`[AI Route] Erro no modelo ${modelName} (${response.status}): ${errText}`);
+          lastError = new Error(`Erro na API do Gemini (${modelName}): ${errText}`);
+        }
+      } catch (err: any) {
+        console.warn(`[AI Route] Exceção ao chamar modelo ${modelName}:`, err.message);
+        lastError = err;
       }
     }
 
-    // Inserir a instrução do sistema e o prompt atual na mensagem do usuário
-    contents.push({
-      role: "user",
-      parts: [{ text: `${contextPrompt}\n\nPergunta do usuário: ${message}` }],
-    });
-
-    // Fazer a chamada HTTP REST para o Gemini
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
-    
-    const response = await fetch(geminiUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ contents }),
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`Erro na API do Gemini: ${errText}`);
+    if (lastError && !aiText) {
+      throw lastError;
     }
-
-    const resJson = await response.json() as any;
-    const aiText = resJson?.candidates?.[0]?.content?.parts?.[0]?.text || "Desculpe, não consegui processar a resposta.";
 
     res.json({ text: aiText });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error("[AI Route Error]", err);
+    res.status(500).json({ error: err.message || "Erro interno ao processar chat de IA." });
   }
 });
 

@@ -6,11 +6,54 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { createServerFn } from "@tanstack/react-start";
+import { apiAI } from "@/lib/api";
 
 export type ChatMessage = {
   role: "user" | "assistant";
   content: string;
 };
+
+const CANDIDATE_MODELS = [
+  "gemini-2.0-flash",
+  "gemini-1.5-flash",
+  "gemini-1.5-pro",
+  "gemini-1.0-pro",
+];
+
+function formatGeminiContents(history: ChatMessage[], currentMessage: string) {
+  const rawTurns: Array<{ role: "user" | "model"; text: string }> = [];
+
+  if (Array.isArray(history)) {
+    for (const msg of history) {
+      if (!msg || typeof msg.content !== "string" || !msg.content.trim()) continue;
+      const role = msg.role === "user" ? "user" : "model";
+      rawTurns.push({ role, text: msg.content.trim() });
+    }
+  }
+
+  rawTurns.push({ role: "user", text: currentMessage.trim() });
+
+  const contents: Array<{ role: "user" | "model"; parts: Array<{ text: string }> }> = [];
+
+  for (const turn of rawTurns) {
+    if (contents.length === 0) {
+      contents.push({ role: turn.role, parts: [{ text: turn.text }] });
+    } else {
+      const last = contents[contents.length - 1];
+      if (last.role === turn.role) {
+        last.parts[0].text += `\n${turn.text}`;
+      } else {
+        contents.push({ role: turn.role, parts: [{ text: turn.text }] });
+      }
+    }
+  }
+
+  if (contents.length > 0 && contents[0].role !== "user") {
+    contents.shift();
+  }
+
+  return contents;
+}
 
 // ─── Server Function: Processar chat com Gemini e dados do Supabase ──────────
 export const aiChatFn = createServerFn({ method: "POST" })
@@ -27,13 +70,18 @@ export const aiChatFn = createServerFn({ method: "POST" })
       supabaseAdmin.from("contas_a_pagar").select("fornecedor, categoria, descricao, vencimento, valor, status, recorrente")
     ]);
 
+    const clientes = clientesRes.data ?? [];
+    const produtos = produtosRes.data ?? [];
+    const vendas = vendasRes.data ?? [];
+    const contas = contasRes.data ?? [];
+
     const dataAtual = new Date().toLocaleDateString("pt-BR", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
     });
 
-    const contextPrompt = `
+    const systemPromptText = `
 Você é o assistente inteligente da fábrica de doces **Doces Lucelian (Lucelian Sweet Flow)**.
 Sua missão é ajudar o administrador respondendo perguntas de forma concisa, educada e direta baseando-se estritamente nos dados reais fornecidos abaixo.
 Utilize formatação Markdown para deixar as respostas organizadas (listas, negritos e tabelas curtas são recomendados).
@@ -42,16 +90,16 @@ Utilize formatação Markdown para deixar as respostas organizadas (listas, negr
 ### DADOS REAIS DO SISTEMA (Atualizados em: ${dataAtual})
 
 #### Clientes Cadastrados:
-${JSON.stringify(clientesRes.data ?? [])}
+${JSON.stringify(clientes)}
 
 #### Produtos Cadastrados:
-${JSON.stringify(produtosRes.data ?? [])}
+${JSON.stringify(produtos)}
 
 #### Histórico de Vendas Realizadas:
-${JSON.stringify(vendasRes.data ?? [])}
+${JSON.stringify(vendas)}
 
 #### Contas a Pagar (Despesas/Compromissos):
-${JSON.stringify(contasRes.data ?? [])}
+${JSON.stringify(contas)}
 ---
 
 ### REGRAS E DIRETRIZES:
@@ -61,73 +109,52 @@ ${JSON.stringify(contasRes.data ?? [])}
 4. Mantenha os cálculos corretos. Se pedirem somas ou faturamentos, calcule com base nos valores numéricos dos dados fornecidos.
 `;
 
-    const geminiKey = process.env.GEMINI_API_KEY;
+    const geminiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
     if (!geminiKey) {
       throw new Error("Chave da API do Gemini (GEMINI_API_KEY) não configurada no servidor.");
     }
 
-    const contents = [];
-    if (Array.isArray(history)) {
-      for (const msg of history) {
-        contents.push({
-          role: msg.role === "user" ? "user" : "model",
-          parts: [{ text: msg.content }],
+    const contents = formatGeminiContents(history, message);
+
+    const payload = {
+      systemInstruction: {
+        parts: [{ text: systemPromptText }],
+      },
+      contents,
+    };
+
+    let lastError: Error | null = null;
+    let aiText = "";
+
+    for (const modelName of CANDIDATE_MODELS) {
+      try {
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${geminiKey}`;
+        const response = await fetch(geminiUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
         });
+
+        if (response.ok) {
+          const resJson = await response.json() as any;
+          aiText = resJson?.candidates?.[0]?.content?.parts?.[0]?.text || "Desculpe, não consegui processar a resposta.";
+          lastError = null;
+          break;
+        } else {
+          const errText = await response.text();
+          console.warn(`[AiAssistant serverFn] Erro no modelo ${modelName} (${response.status}): ${errText}`);
+          lastError = new Error(`Erro na API do Gemini (${modelName}): ${errText}`);
+        }
+      } catch (err: any) {
+        console.warn(`[AiAssistant serverFn] Exceção ao chamar ${modelName}:`, err.message);
+        lastError = err;
       }
     }
 
-    contents.push({
-      role: "user",
-      parts: [{ text: `${contextPrompt}\n\nPergunta do usuário: ${message}` }],
-    });
-
-    let modelName = "gemini-1.5-flash"; // Fallback padrão
-
-    try {
-      // Lista os modelos disponíveis para esta chave de API específica do usuário
-      const listModelsUrl = `https://generativelanguage.googleapis.com/v1/models?key=${geminiKey}`;
-      const listRes = await fetch(listModelsUrl);
-      if (!listRes.ok) {
-        const errText = await listRes.text();
-        throw new Error("Erro ao listar modelos do Gemini: " + errText);
-      }
-      const listData = await listRes.json() as any;
-      const models = listData.models || [];
-      const modelNames = models.map((m: any) => m.name || "");
-      
-      // Lista de prioridades baseada nos modelos disponíveis na chave
-      const targetModels = [
-        "models/gemini-3.5-flash",
-        "models/gemini-2.0-flash",
-        "models/gemini-2.5-pro",
-        "models/gemini-2.5-flash-lite",
-        "models/gemini-2.0-flash-lite"
-      ];
-      
-      const foundModel = targetModels.find(target => modelNames.includes(target)) || 
-                         modelNames.find((name: string) => name.includes("gemini") && !name.includes("embedding"));
-                         
-      if (foundModel) {
-        modelName = foundModel.replace("models/", "");
-      }
-    } catch (e) {
-      console.warn("Erro ao detectar modelo do Gemini, usando fallback:", e);
+    if (lastError && !aiText) {
+      throw lastError;
     }
 
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1/models/${modelName}:generateContent?key=${geminiKey}`;
-    const response = await fetch(geminiUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ contents }),
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`Erro na API do Gemini: ${errText}`);
-    }
-
-    const resJson = await response.json() as any;
-    const aiText = resJson?.candidates?.[0]?.content?.parts?.[0]?.text || "Desculpe, não consegui processar a resposta.";
     return { text: aiText };
   });
 
@@ -221,9 +248,18 @@ export function AiAssistant() {
     setLoading(true);
 
     try {
-      // Chama a Server Function nativa do TanStack Start
-      const res = await aiChatFn({ data: { message: userMessage, history: messages } });
-      setMessages((prev) => [...prev, { role: "assistant", content: res.text }]);
+      let responseText = "";
+      try {
+        // Tenta enviar via backend Express centralizado primeiro
+        const res = await apiAI.chat(userMessage, messages);
+        responseText = res.text;
+      } catch (apiErr) {
+        console.warn("Express backend AI endpoint indisponível ou falhou, usando serverFn fallback:", apiErr);
+        const res = await aiChatFn({ data: { message: userMessage, history: messages } });
+        responseText = res.text;
+      }
+
+      setMessages((prev) => [...prev, { role: "assistant", content: responseText }]);
     } catch (err: any) {
       console.error(err);
       toast.error(err.message || "Erro ao obter resposta do assistente.");
