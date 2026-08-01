@@ -43,6 +43,10 @@ async function request<T>(
   const res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
 
   if (!res.ok) {
+    if (res.status === 401 && typeof window !== "undefined") {
+      localStorage.removeItem("app_session");
+      window.dispatchEvent(new Event("storage"));
+    }
     let message = `Erro ${res.status}`;
     try {
       const body = await res.json();
@@ -161,7 +165,7 @@ export type ProdutoPayload = Omit<Produto, "id">;
 
 export const apiProdutos = {
   list: () => get<Produto[]>("/api/produtos"),
-  create: (payload: ProdutoPayload) => post<Produto>("/api/produtoes", payload),
+  create: (payload: ProdutoPayload) => post<Produto>("/api/produtos", payload),
   update: (id: string, payload: ProdutoPayload) => put<{ success: boolean }>(`/api/produtos/${id}`, payload),
   delete: (id: string) => del<{ success: boolean }>(`/api/produtos/${id}`),
 };

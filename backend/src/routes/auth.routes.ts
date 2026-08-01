@@ -43,7 +43,13 @@ router.post("/login", async (req: Request, res: Response): Promise<void> => {
       .maybeSingle();
 
     if (!existing) {
-      const adminHash = await bcrypt.hash("Doceslucelian$2026", 12);
+      const adminDefaultPassword = process.env.ADMIN_DEFAULT_PASSWORD;
+      if (!adminDefaultPassword) {
+        throw new Error(
+          "ADMIN_DEFAULT_PASSWORD não está definida. Configure no arquivo backend/.env."
+        );
+      }
+      const adminHash = await bcrypt.hash(adminDefaultPassword, 12);
       await supabase
         .from("usuarios")
         .insert({ email: "admin", senha_hash: adminHash });
@@ -97,7 +103,8 @@ router.post("/login", async (req: Request, res: Response): Promise<void> => {
       token,
     });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error("[Auth] Login error:", err.message);
+    res.status(500).json({ error: "Erro interno ao processar login." });
   }
 });
 

@@ -9,10 +9,13 @@ export function errorHandler(
   res: Response,
   _next: NextFunction
 ): void {
-  console.error("[ERROR]", err.message);
+  console.error("[ERROR]", err.stack || err.message);
 
   const statusCode = (err as any).statusCode || 500;
+  const isProd = process.env.NODE_ENV === "production";
+
   res.status(statusCode).json({
-    error: err.message || "Erro interno do servidor.",
+    error: isProd && statusCode === 500 ? "Erro interno do servidor." : (err.message || "Erro interno do servidor."),
   });
 }
+

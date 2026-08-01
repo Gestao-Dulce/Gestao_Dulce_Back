@@ -16,7 +16,14 @@ declare global {
   }
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || "fallback-secret";
+const JWT_SECRET = process.env.JWT_SECRET || "";
+
+if (!JWT_SECRET) {
+  throw new Error(
+    "JWT_SECRET não está definida nas variáveis de ambiente. " +
+    "Configure-a no arquivo backend/.env antes de iniciar o servidor."
+  );
+}
 
 /**
  * Middleware que exige autenticação via Bearer JWT.
@@ -33,7 +40,7 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
   const token = authHeader.split(" ")[1];
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as AuthUser;
+    const decoded = jwt.verify(token, JWT_SECRET) as unknown as AuthUser;
     req.user = {
       id: decoded.id,
       email: decoded.email,
@@ -66,3 +73,4 @@ export function generateToken(user: AuthUser): string {
     { expiresIn }
   );
 }
+
