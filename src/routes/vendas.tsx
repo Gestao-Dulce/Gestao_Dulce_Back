@@ -698,111 +698,114 @@ function VendaDialog({ open, onClose, clientes, produtosUsados, produtosCadastra
               <Button onClick={save}>{editId ? "Salvar alterações" : "Registrar venda"}</Button>
             </div>
           </div>
+
+          {/* Modal de cadastro rápido de novo cliente */}
+          {novoOpen && (
+            <div
+              className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
+              onClick={() => setNovoOpen(false)}
+            >
+              <Card
+                className="w-full max-w-md bg-card border shadow-2xl space-y-4 p-5 animate-in zoom-in-95 duration-200"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center justify-between border-b pb-3">
+                  <h3 className="font-semibold text-lg">Novo cliente</h3>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-8 rounded-full"
+                    onClick={() => setNovoOpen(false)}
+                  >
+                    <X className="size-4" />
+                  </Button>
+                </div>
+                <div className="space-y-3">
+                  <div className="space-y-1.5">
+                    <Label>Nome / Razão social</Label>
+                    <Input value={novoNome} onChange={(e) => setNovoNome(e.target.value)} autoFocus />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Contato</Label>
+                    <Input value={novoContato} onChange={(e) => setNovoContato(e.target.value)} placeholder="Telefone, email..." />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>CPF / CNPJ</Label>
+                    <Input value={novoDoc} onChange={(e) => setNovoDoc(e.target.value)} />
+                  </div>
+                </div>
+                <div className="flex gap-2 justify-end pt-2 border-t">
+                  <Button variant="ghost" type="button" onClick={() => setNovoOpen(false)}>
+                    Cancelar
+                  </Button>
+                  <Button type="button" onClick={criarCliente} disabled={salvandoCliente}>
+                    {salvandoCliente ? "Salvando..." : "Cadastrar e usar"}
+                  </Button>
+                </div>
+              </Card>
+            </div>
+          )}
+
+          {/* Modal de cadastro rápido de novo produto */}
+          {novoProdOpen && (
+            <div
+              className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
+              onClick={() => setNovoProdOpen(false)}
+            >
+              <Card
+                className="w-full max-w-md bg-card border shadow-2xl space-y-4 p-5 animate-in zoom-in-95 duration-200"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center justify-between border-b pb-3">
+                  <h3 className="font-semibold text-lg">Novo produto</h3>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-8 rounded-full"
+                    onClick={() => setNovoProdOpen(false)}
+                  >
+                    <X className="size-4" />
+                  </Button>
+                </div>
+                <div className="space-y-3">
+                  <div className="space-y-1.5">
+                    <Label>Nome</Label>
+                    <Input value={npNome} onChange={(e) => setNpNome(e.target.value)} autoFocus />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label>Unidade</Label>
+                      <Select value={npUnidade} onValueChange={setNpUnidade}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {UNIDADES.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>Valor (R$)</Label>
+                      <CurrencyInput value={npValor} onValueChange={setNpValor} />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Observação</Label>
+                    <Textarea value={npObs} onChange={(e) => setNpObs(e.target.value)} rows={3} />
+                  </div>
+                </div>
+                <div className="flex gap-2 justify-end pt-2 border-t">
+                  <Button variant="ghost" type="button" onClick={() => setNovoProdOpen(false)}>
+                    Cancelar
+                  </Button>
+                  <Button type="button" onClick={criarProduto} disabled={salvandoProd}>
+                    {salvandoProd ? "Salvando..." : "Cadastrar e usar"}
+                  </Button>
+                </div>
+              </Card>
+            </div>
+          )}
+
         </DialogContent>
       </Dialog>
-
-      {novoOpen && (
-        <div
-          className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
-          onClick={() => setNovoOpen(false)}
-        >
-          <Card
-            className="w-full max-w-md bg-card border shadow-2xl space-y-4 p-5 animate-in zoom-in-95 duration-200"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between border-b pb-3">
-              <h3 className="font-semibold text-lg">Novo cliente</h3>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-8 rounded-full"
-                onClick={() => setNovoOpen(false)}
-              >
-                <X className="size-4" />
-              </Button>
-            </div>
-            <div className="space-y-3">
-              <div className="space-y-1.5">
-                <Label>Nome / Razão social</Label>
-                <Input value={novoNome} onChange={(e) => setNovoNome(e.target.value)} autoFocus />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Contato</Label>
-                <Input value={novoContato} onChange={(e) => setNovoContato(e.target.value)} placeholder="Telefone, email..." />
-              </div>
-              <div className="space-y-1.5">
-                <Label>CPF / CNPJ</Label>
-                <Input value={novoDoc} onChange={(e) => setNovoDoc(e.target.value)} />
-              </div>
-            </div>
-            <div className="flex gap-2 justify-end pt-2 border-t">
-              <Button variant="ghost" type="button" onClick={() => setNovoOpen(false)}>
-                Cancelar
-              </Button>
-              <Button type="button" onClick={criarCliente} disabled={salvandoCliente}>
-                {salvandoCliente ? "Salvando..." : "Cadastrar e usar"}
-              </Button>
-            </div>
-          </Card>
-        </div>
-      )}
-
-      {novoProdOpen && (
-        <div
-          className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
-          onClick={() => setNovoProdOpen(false)}
-        >
-          <Card
-            className="w-full max-w-md bg-card border shadow-2xl space-y-4 p-5 animate-in zoom-in-95 duration-200"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between border-b pb-3">
-              <h3 className="font-semibold text-lg">Novo produto</h3>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-8 rounded-full"
-                onClick={() => setNovoProdOpen(false)}
-              >
-                <X className="size-4" />
-              </Button>
-            </div>
-            <div className="space-y-3">
-              <div className="space-y-1.5">
-                <Label>Nome</Label>
-                <Input value={npNome} onChange={(e) => setNpNome(e.target.value)} autoFocus />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label>Unidade</Label>
-                  <Select value={npUnidade} onValueChange={setNpUnidade}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {UNIDADES.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Valor (R$)</Label>
-                  <CurrencyInput value={npValor} onValueChange={setNpValor} />
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <Label>Observação</Label>
-                <Textarea value={npObs} onChange={(e) => setNpObs(e.target.value)} rows={3} />
-              </div>
-            </div>
-            <div className="flex gap-2 justify-end pt-2 border-t">
-              <Button variant="ghost" type="button" onClick={() => setNovoProdOpen(false)}>
-                Cancelar
-              </Button>
-              <Button type="button" onClick={criarProduto} disabled={salvandoProd}>
-                {salvandoProd ? "Salvando..." : "Cadastrar e usar"}
-              </Button>
-            </div>
-          </Card>
-        </div>
-      )}
     </>
   );
 }
