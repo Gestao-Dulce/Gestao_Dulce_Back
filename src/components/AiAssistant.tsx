@@ -54,6 +54,28 @@ function formatGeminiContents(history: ChatMessage[], currentMessage: string) {
   return contents;
 }
 
+function extractGeminiText(resJson: any): string {
+  const candidate = resJson?.candidates?.[0];
+  if (!candidate) return "";
+
+  const parts = candidate?.content?.parts;
+  if (Array.isArray(parts) && parts.length > 0) {
+    const textParts = parts
+      .map((p: any) => (typeof p === "string" ? p : p?.text))
+      .filter((t: any) => typeof t === "string" && t.trim().length > 0);
+
+    if (textParts.length > 0) {
+      return textParts.join("\n\n");
+    }
+  }
+
+  if (candidate?.finishReason === "SAFETY") {
+    return "A resposta foi retida pelas diretrizes de conteúdo da API.";
+  }
+
+  return "";
+}
+
 // ─── Server Function: Processar chat com Gemini e dados do Supabase ──────────
 export const aiChatFn = createServerFn({ method: "POST" })
   .validator((d: { message: string; history: ChatMessage[] }) => d)
@@ -114,11 +136,11 @@ ${dadosExternos ? `- Integração de API Externa Customizada: ${JSON.stringify(d
 
 ### REGRAS E DIRETRIZES:
 1. Responda em Português do Brasil (pt-BR) de forma amigável, clara e objetiva.
-2. **Perguntas Genéricas & Buscas na Web (Google Search)**:
-   - Você é um assistente completo e prestativo. Responda a **QUALQUER pergunta genérica** feita pelo usuário (sobre receitas, dicas de negócios, culinária, história, curiosidades, notícias atuais, clima ou conhecimentos gerais).
-   - Utilize a busca na web (Google Search) sempre que precisar de dados atualizados ou informações do mundo real para responder com precisão.
+2. **Perguntas Genéricas & Conhecimento de Mercado**:
+   - Você é um assistente completo e prestativo. Responda a **QUALQUER pergunta genérica** feita pelo usuário (sobre receitas, dicas de negócios, culinária, história, curiosidades, notícias atuais, clima, cotações ou conhecimentos gerais).
+   - Utilize seu conhecimento vasto e as ferramentas de busca sempre que necessário para fornecer respostas detalhadas e úteis.
 3. **Comparação de Preços com a Internet/Mercado**:
-   - Quando perguntado sobre comparativo de preços ou mercado, consulte os valores dos produtos cadastrados e pesquise as médias da internet para montar tabelas comparativas.
+   - Quando perguntado sobre comparativo de preços ou mercado, consulte os valores dos produtos cadastrados e apresente tabelas comparativas e análises.
 4. **Dados Internos do Sistema**:
    - Para perguntas sobre faturamento, vendas, clientes cadastrados, produtos da fábrica ou contas a pagar, consulte os dados fornecidos nas tabelas internas acima.
 5. **Segurança de Credenciais**:
@@ -166,9 +188,12 @@ ${dadosExternos ? `- Integração de API Externa Customizada: ${JSON.stringify(d
 
         if (response.ok) {
           const resJson = (await response.json()) as any;
-          aiText = resJson?.candidates?.[0]?.content?.parts?.[0]?.text || "Desculpe, não consegui processar a resposta.";
-          lastErrorText = "";
-          break;
+          const extractedText = extractGeminiText(resJson);
+          if (extractedText) {
+            aiText = extractedText;
+            lastErrorText = "";
+            break;
+          }
         } else {
           const errText = await response.text();
           console.warn(`[AiAssistant serverFn] Erro no modelo ${modelName} (${response.status}): ${errText}`);
