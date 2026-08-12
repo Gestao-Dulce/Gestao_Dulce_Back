@@ -68,8 +68,8 @@ export function AppShell() {
       {/* Sidebar - Desktop */}
       <aside className="w-64 shrink-0 bg-sidebar text-sidebar-foreground hidden md:flex flex-col justify-between border-r border-sidebar-border sticky top-0 h-screen">
         <div className="flex flex-col">
-          <div className="px-4 py-4">
-            <div id="tour-logo" className="flex items-center justify-center bg-white p-2.5 rounded-xl shadow-sm w-[170px] mx-auto">
+          <div className="px-2 py-4">
+            <div id="tour-logo" className="flex items-center justify-center bg-white p-1.5 rounded-xl shadow-sm w-full">
               <img src={logoDulce} alt="Gestão Dulce" className="w-full h-auto object-contain" />
             </div>
             <div className="text-[10px] tracking-[0.2em] uppercase text-sidebar-foreground/70 mt-3 text-center">
@@ -131,9 +131,9 @@ export function AppShell() {
               </SheetTrigger>
               <SheetContent side="left" className="w-64 bg-sidebar text-sidebar-foreground p-0 flex flex-col justify-between">
                 <div>
-                  <SheetHeader className="p-4 border-b border-sidebar-border text-left">
+                  <SheetHeader className="p-2 border-b border-sidebar-border text-left">
                     <SheetTitle className="text-sidebar-foreground flex flex-col items-center">
-                      <div className="bg-white p-2 rounded-xl shadow-sm max-w-[130px] w-full flex items-center justify-center">
+                      <div className="bg-white p-1.5 rounded-xl shadow-sm w-full flex items-center justify-center">
                         <img src={logoDulce} alt="Gestão Dulce" className="w-full h-auto object-contain" />
                       </div>
                       <span className="text-[9px] tracking-[0.2em] uppercase text-sidebar-foreground/70 mt-2 block">
