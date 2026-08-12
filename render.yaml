@@ -1,0 +1,43 @@
+services:
+  - type: web
+    name: gestao-dulce-api
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+      # ── Supabase ────────────────────────────────────────────────────────
+      - key: SUPABASE_URL
+        sync: false   # preencha manualmente no painel do Render
+
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false   # preencha manualmente no painel do Render
+
+      - key: SUPABASE_PUBLISHABLE_KEY
+        sync: false   # preencha manualmente no painel do Render
+
+      # ── JWT ─────────────────────────────────────────────────────────────
+      - key: JWT_SECRET
+        sync: false   # preencha manualmente no painel do Render (valor longo e aleatório)
+
+      - key: JWT_EXPIRES_IN
+        value: 24h
+
+      # ── CORS ─────────────────────────────────────────────────────────────
+      # Liste as origens separadas por vírgula, ex: https://seu-app.vercel.app
+      - key: ALLOWED_ORIGINS
+        sync: false   # preencha manualmente após obter a URL do frontend
+
+      # ── Admin ────────────────────────────────────────────────────────────
+      - key: ADMIN_DEFAULT_PASSWORD
+        sync: false   # preencha manualmente no painel do Render
+
+      # ── Google Gemini AI ─────────────────────────────────────────────────
+      - key: GEMINI_API_KEY
+        sync: false   # preencha manualmente no painel do Render

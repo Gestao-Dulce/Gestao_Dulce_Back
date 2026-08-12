@@ -4,6 +4,9 @@
   "private": true,
   "description": "Backend API REST para Doces Lucelian — Gestão Dulce",
   "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
