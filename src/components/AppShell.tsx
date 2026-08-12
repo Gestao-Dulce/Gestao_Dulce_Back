@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import logoLucelian from "@/assets/logo-lucelian.png";
+import logoDulce from "@/assets/logo-dulce.jpg";
 
 const nav = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -69,8 +69,8 @@ export function AppShell() {
       <aside className="w-64 shrink-0 bg-sidebar text-sidebar-foreground hidden md:flex flex-col justify-between border-r border-sidebar-border sticky top-0 h-screen">
         <div className="flex flex-col">
           <div className="px-4 py-4">
-            <div id="tour-logo" className="flex items-center justify-center">
-              <img src={logoLucelian} alt="Doces Lucelian" className="max-w-[150px] h-auto object-contain" />
+            <div id="tour-logo" className="flex items-center justify-center bg-white p-2.5 rounded-xl shadow-sm w-[170px] mx-auto">
+              <img src={logoDulce} alt="Gestão Dulce" className="w-full h-auto object-contain" />
             </div>
             <div className="text-[10px] tracking-[0.2em] uppercase text-sidebar-foreground/70 mt-3 text-center">
               Gestão Financeira
@@ -133,7 +133,9 @@ export function AppShell() {
                 <div>
                   <SheetHeader className="p-4 border-b border-sidebar-border text-left">
                     <SheetTitle className="text-sidebar-foreground flex flex-col items-center">
-                      <img src={logoLucelian} alt="Doces Lucelian" className="max-w-[120px] h-auto object-contain" />
+                      <div className="bg-white p-2 rounded-xl shadow-sm max-w-[130px] w-full flex items-center justify-center">
+                        <img src={logoDulce} alt="Gestão Dulce" className="w-full h-auto object-contain" />
+                      </div>
                       <span className="text-[9px] tracking-[0.2em] uppercase text-sidebar-foreground/70 mt-2 block">
                         Gestão Financeira
                       </span>
@@ -168,7 +170,9 @@ export function AppShell() {
               <Button variant="ghost" size="icon" onClick={toggle} aria-label="Alternar tema" className="size-8 text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground">
                 {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
               </Button>
-              <img src={logoLucelian} alt="Doces Lucelian" className="h-8 w-auto object-contain" />
+              <div className="bg-white p-1 rounded-lg shadow-sm flex items-center justify-center h-9">
+                <img src={logoDulce} alt="Gestão Dulce" className="h-7 w-auto object-contain" />
+              </div>
             </div>
           </div>
         </header>
