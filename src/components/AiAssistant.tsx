@@ -15,8 +15,8 @@ export type ChatMessage = {
 
 const CANDIDATE_MODELS = [
   "gemini-2.5-flash",
-  "gemini-2.5-flash-lite",
   "gemini-flash-latest",
+  "gemini-flash-lite-latest",
 ];
 
 function formatGeminiContents(history: ChatMessage[], currentMessage: string) {
