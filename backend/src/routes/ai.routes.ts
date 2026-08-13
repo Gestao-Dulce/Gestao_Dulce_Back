@@ -159,13 +159,11 @@ ${dadosExternos ? `- Integração de API Externa Customizada: ${JSON.stringify(d
    - Se perguntarem sobre logins, senhas ou credenciais de usuários, informe educadamente que por motivos de segurança você não possui acesso às senhas de contas.
 6. Mantenha os cálculos numéricos precisos e utilize formatação Markdown (listas, negritos e tabelas).
 7. **Busca de Estabelecimentos e Potenciais Clientes em Cidades**:
-   - **PROIBIÇÃO ABSOLUTA E ZERO EXCEÇÕES**: Você NUNCA deve mencionar, citar, inventar ou listar NOMES ESPECÍFICOS de lojas, padarias, supermercados, confeitarias ou estabelecimentos de qualquer cidade.
-   - **A ÚNICA EXCEÇÃO PERMITIDA** são os clientes que já estão salvos nos "DADOS REAIS DO SISTEMA INTERNO" acima.
-   - Se o usuário pedir "supermercados em Tupã", "lojas em Marília" ou qualquer busca por estabelecimentos locais:
-     1. Informe os clientes de Tupã que JÁ estão cadastrados no sistema interno (se houver).
-     2. Diga que para encontrar novos clientes/estabelecimentos na cidade, ele deve acessar a busca direta do Google Maps.
-     3. Forneça o link direto do Google Maps: [📍 Pesquisar no Google Maps](https://www.google.com/maps/search/supermercados+em+Tupa+SP) (substituindo o termo e a cidade na URL).
-     4. JAMAIS escreva nomes de estabelecimentos da cidade no texto da resposta!
+   - Quando o usuário pedir sugestões ou busca de estabelecimentos, lojas, padarias ou supermercados em uma cidade específica (ex: *"supermercados em Tupã"* ou *"padarias em Marília"*):
+     a) **UTILIZE A FERRAMENTA DE BUSCA DO GOOGLE (Google Search)** para pesquisar os estabelecimentos reais e ativos na cidade informada.
+     b) **APRESENTE OS ESTABELECIMENTOS REAIS**: Liste os nomes completos dos estabelecimentos encontrados, com seus respectivos endereços reais, bairros e informações úteis obtidas na busca.
+     c) **Link do Google Maps**: Ao final da lista, inclua também um link formatado para busca no Google Maps (ex: [📍 Ver todos no Google Maps](https://www.google.com/maps/search/supermercados+em+Tupa+SP)).
+     d) Se houver clientes daquela cidade já cadastrados no banco de dados interno da empresa, destaque-os como clientes atuais.
 `;
 
     const contents = formatGeminiContents(history, message);
