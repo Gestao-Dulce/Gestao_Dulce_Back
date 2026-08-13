@@ -10,7 +10,7 @@ router.use(requireAuth);
 const CANDIDATE_MODELS = [
   "gemini-2.0-flash",
   "gemini-1.5-flash",
-  "gemini-2.0-flash-lite",
+  "gemini-1.5-flash-8b",
 ];
 
 function formatGeminiContents(history: any[], currentMessage: string) {
