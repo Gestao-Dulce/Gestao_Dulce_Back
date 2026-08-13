@@ -79,6 +79,54 @@ function extractGeminiText(resJson: any): string {
   return "";
 }
 
+// Função auxiliar para buscar estabelecimentos e endereços reais via API oficial de Mapas
+async function fetchRealPlaces(userMessage: string) {
+  try {
+    const msg = userMessage.toLowerCase();
+    // Detecta palavras-chave de busca comercial/lugares
+    const isPlacesQuery = /supermercado|padaria|loja|confeitaria|mercado|buffet|comercio|estabelecimento|cliente|posto|posto de combustivel/i.test(msg);
+    if (!isPlacesQuery) return null;
+
+    // Tenta extrair a cidade informada ou padrões de cidade
+    const cityMatch = msg.match(/(?:em|de|para|na cidade de)\s+([a-zA-záàâãéèêíóòôõúç\s]+)/i);
+    const queryTerm = userMessage.trim();
+
+    const searchUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(queryTerm)}&format=json&addressdetails=1&limit=10&countrycodes=br`;
+    const res = await fetch(searchUrl, {
+      headers: {
+        "User-Agent": "GestaoDulceApp/1.0 (contato@doceslucelian.com.br)"
+      }
+    });
+
+    if (!res.ok) return null;
+    const places = await res.json();
+    if (!Array.isArray(places) || places.length === 0) return null;
+
+    return places.map((p: any) => {
+      const addr = p.address || {};
+      const road = addr.road || addr.street || "";
+      const houseNumber = addr.house_number || "";
+      const suburb = addr.suburb || addr.neighbourhood || addr.city_district || "";
+      const city = addr.city || addr.town || addr.municipality || "";
+      const state = addr.state || "";
+      const fullAddress = [road ? `${road}${houseNumber ? `, ${houseNumber}` : ""}` : "", suburb, city, state].filter(Boolean).join(" - ");
+
+      return {
+        nome_oficial: p.display_name?.split(",")[0] || p.name || "Estabelecimento Local",
+        categoria: p.type || p.class || "Comércio",
+        endereco_completo: fullAddress || p.display_name,
+        cidade: city,
+        latitude: p.lat,
+        longitude: p.lon,
+        google_maps_url: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.display_name)}`
+      };
+    });
+  } catch (err) {
+    console.warn("[fetchRealPlaces] Erro ao consultar API de mapas:", err);
+    return null;
+  }
+}
+
 router.post("/chat", async (req: Request, res: Response): Promise<void> => {
   try {
     const { message, history } = req.body;
@@ -95,8 +143,8 @@ router.post("/chat", async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    // 1. Carregar dados das tabelas e fontes externas em paralelo com resiliência
-    const [clientesRes, produtosRes, vendasRes, contasRes, cotacoesRes, customExternalRes] = await Promise.allSettled([
+    // 1. Carregar dados das tabelas, fontes externas e busca de locais em paralelo com resiliência
+    const [clientesRes, produtosRes, vendasRes, contasRes, cotacoesRes, customExternalRes, lugaresReaisRes] = await Promise.allSettled([
       supabase.from("clientes").select("nome, cpf_cnpj, contato, cidade, bairro"),
       supabase.from("produtos").select("nome, unidade, valor, observacao"),
       supabase.from("vendas").select("data, valor_total, status_pagamento, forma_pagamento, nota_fiscal, clientes(nome), venda_itens(produto, quantidade, valor_unitario, unidade)"),
@@ -105,6 +153,7 @@ router.post("/chat", async (req: Request, res: Response): Promise<void> => {
       process.env.EXTERNAL_DATA_API_URL
         ? fetch(process.env.EXTERNAL_DATA_API_URL).then((r) => (r.ok ? r.json() : null)).catch(() => null)
         : Promise.resolve(null),
+      fetchRealPlaces(message),
     ]);
 
     const clientes = clientesRes.status === "fulfilled" && clientesRes.value.data ? clientesRes.value.data : [];
@@ -113,6 +162,7 @@ router.post("/chat", async (req: Request, res: Response): Promise<void> => {
     const contas = contasRes.status === "fulfilled" && contasRes.value.data ? contasRes.value.data : [];
     const cotacoes = cotacoesRes.status === "fulfilled" ? cotacoesRes.value : null;
     const dadosExternos = customExternalRes.status === "fulfilled" ? customExternalRes.value : null;
+    const lugaresReais = lugaresReaisRes.status === "fulfilled" ? lugaresReaisRes.value : null;
 
     const dataAtual = new Date().toLocaleDateString("pt-BR", {
       day: "2-digit",
@@ -144,26 +194,21 @@ ${JSON.stringify(contas)}
 ### DADOS E COTAÇÕES EXTERNAS EM TEMPO REAL:
 - Cotações Financeiras de Moedas: ${JSON.stringify(cotacoes ?? "Indisponível no momento")}
 ${dadosExternos ? `- Integração de API Externa Customizada: ${JSON.stringify(dadosExternos)}` : ""}
+${lugaresReais ? `- ESTABELECIMENTOS E ENDEREÇOS REAIS ENCONTRADOS VIA API DE MAPAS: ${JSON.stringify(lugaresReais)}` : ""}
 ---
 
 ### REGRAS E DIRETRIZES:
 1. Responda em Português do Brasil (pt-BR) de forma amigável, clara e objetiva.
 2. **Perguntas Genéricas & Conhecimento de Mercado**:
-   - Você é um assistente completo e prestativo. Responda a **QUALQUER pergunta genérica** feita pelo usuário (sobre receitas, dicas de negócios, culinária, história, curiosidades, notícias atuais, clima, cotações ou conhecimentos gerais).
-   - Utilize seu conhecimento vasto e as ferramentas de busca sempre que necessário para fornecer respostas detalhadas e úteis.
-3. **Comparação de Preços com a Internet/Mercado**:
-   - Quando perguntado sobre comparativo de preços ou mercado, consulte os valores dos produtos cadastrados e apresente tabelas comparativas e análises.
-4. **Dados Internos do Sistema**:
-   - Para perguntas sobre faturamento, vendas, clientes cadastrados, produtos da fábrica ou contas a pagar, consulte os dados fornecidos nas tabelas internas acima.
-5. **Segurança de Credenciais**:
-   - Se perguntarem sobre logins, senhas ou credenciais de usuários, informe educadamente que por motivos de segurança você não possui acesso às senhas de contas.
-6. Mantenha os cálculos numéricos precisos e utilize formatação Markdown (listas, negritos e tabelas).
-7. **Busca de Estabelecimentos e Potenciais Clientes em Cidades**:
-   - Quando o usuário pedir sugestões ou busca de estabelecimentos, lojas, padarias ou supermercados em uma cidade específica (ex: *"supermercados em Tupã"* ou *"padarias em Marília"*):
-     a) **UTILIZE A FERRAMENTA DE BUSCA DO GOOGLE (Google Search)** para pesquisar os estabelecimentos reais e ativos na cidade informada.
-     b) **APRESENTE OS ESTABELECIMENTOS REAIS**: Liste os nomes completos dos estabelecimentos encontrados, com seus respectivos endereços reais, bairros e informações úteis obtidas na busca.
-     c) **Link do Google Maps**: Ao final da lista, inclua também um link formatado para busca no Google Maps (ex: [📍 Ver todos no Google Maps](https://www.google.com/maps/search/supermercados+em+Tupa+SP)).
-     d) Se houver clientes daquela cidade já cadastrados no banco de dados interno da empresa, destaque-os como clientes atuais.
+   - Responda a qualquer pergunta sobre receitas, mercado de doces, culinária e curiosidades.
+3. **Busca de Estabelecimentos e Potenciais Clientes em Cidades**:
+   - **FONTE ÚNICA E OFICIAL DE LUGARES**: Apresente estritamente a lista de "ESTABELECIMENTOS E ENDEREÇOS REAIS ENCONTRADOS VIA API DE MAPAS" acima ou os clientes cadastrados no sistema.
+   - **NUNCA INVENTE OU SUPONHA** nomes de estabelecimentos ou endereços que não constem na lista acima.
+   - Para cada estabelecimento real encontrado, exiba:
+     - **Nome Oficial**
+     - **Endereço Completo / Bairro**
+     - **Link do Google Maps**: [📍 Ver no Google Maps](URL) utilizando a URL retornada nos dados.
+   - Se a lista de lugares reais estiver vazia ou indisponível, informe educadamente que não encontrou estabelecimentos no mapa para o termo e forneça o link direto de pesquisa do Google Maps.
 `;
 
     const contents = formatGeminiContents(history, message);
