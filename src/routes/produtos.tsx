@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CurrencyInput } from "@/components/ui/currency-input";
@@ -22,7 +21,7 @@ import {
 
 export const Route = createFileRoute("/produtos")({ component: ProdutosPage });
 
-const UNIDADES = ["unidade", "kg", "caixa"];
+const UNIDADES = ["unidade"];
 
 type Produto = { id: string; nome: string; observacao: string | null; unidade: string; valor: number };
 
@@ -61,7 +60,6 @@ function ProdutosPage() {
   const imprimirRelatorio = () => {
     const linhas = filtrados.map((p) => `<tr>
       <td>${p.nome}</td>
-      <td>${p.unidade.charAt(0).toUpperCase() + p.unidade.slice(1)}</td>
       <td style="text-align:right">${brl(p.valor)}</td>
       <td>${p.observacao ?? "—"}</td>
     </tr>`).join("");
@@ -77,8 +75,8 @@ function ProdutosPage() {
       <h1>Doces Lucelian — Relatório de Produtos</h1>
       <div class="meta">Emitido em ${new Date().toLocaleString("pt-BR")} • ${filtrados.length} produto(s)${busca ? ` • Busca: "${busca}"` : ""}</div>
       <table>
-        <thead><tr><th>Nome</th><th>Unidade</th><th style="text-align:right">Valor</th><th>Observação</th></tr></thead>
-        <tbody>${linhas || `<tr><td colspan="4" style="text-align:center;padding:24px;color:#888">Sem produtos.</td></tr>`}</tbody>
+        <thead><tr><th>Nome</th><th style="text-align:right">Valor</th><th>Observação</th></tr></thead>
+        <tbody>${linhas || `<tr><td colspan="3" style="text-align:center;padding:24px;color:#888">Sem produtos.</td></tr>`}</tbody>
       </table>
       <script>window.onload=()=>window.print();<\/script>
     </body></html>`;
@@ -112,7 +110,6 @@ function ProdutosPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Nome</TableHead>
-                <TableHead>Unidade</TableHead>
                 <TableHead className="text-right">Valor</TableHead>
                 <TableHead>Observação</TableHead>
                 <TableHead></TableHead>
@@ -120,12 +117,11 @@ function ProdutosPage() {
             </TableHeader>
             <TableBody>
               {filtrados.length === 0 && (
-                <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">Nenhum produto cadastrado.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-8">Nenhum produto cadastrado.</TableCell></TableRow>
               )}
               {filtrados.map((p) => (
                 <TableRow key={p.id}>
                   <TableCell className="font-medium">{p.nome}</TableCell>
-                  <TableCell>{p.unidade.charAt(0).toUpperCase() + p.unidade.slice(1)}</TableCell>
                   <TableCell className="text-right tabular-nums">{brl(p.valor)}</TableCell>
                   <TableCell className="text-muted-foreground text-sm max-w-md truncate" title={p.observacao ?? ""}>{p.observacao || "—"}</TableCell>
                   <TableCell>
@@ -204,20 +200,9 @@ function ProdutoDialog({ open, onClose, produto, onSaved }: {
             <Label>Nome</Label>
             <Input value={nome} onChange={(e) => setNome(e.target.value)} autoFocus />
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label>Unidade</Label>
-              <Select value={unidade} onValueChange={setUnidade}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {UNIDADES.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Valor (R$)</Label>
-              <CurrencyInput value={valor} onValueChange={setValor} />
-            </div>
+          <div className="space-y-1.5">
+            <Label>Valor (R$)</Label>
+            <CurrencyInput value={valor} onValueChange={setValor} />
           </div>
           <div className="space-y-1.5">
             <Label>Observação</Label>

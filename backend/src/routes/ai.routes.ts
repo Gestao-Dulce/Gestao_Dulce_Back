@@ -149,6 +149,15 @@ ${dadosExternos ? `- Integração de API Externa Customizada: ${JSON.stringify(d
 5. **Segurança de Credenciais**:
    - Se perguntarem sobre logins, senhas ou credenciais de usuários, informe educadamente que por motivos de segurança você não possui acesso às senhas de contas.
 6. Mantenha os cálculos numéricos precisos e utilize formatação Markdown (listas, negritos e tabelas).
+7. **REGRA CRÍTICA — Proibição de Alucinação de Estabelecimentos e Endereços**:
+   - **NUNCA invente, fabrique ou suponha nomes reais de estabelecimentos** (lojas, padarias, confeitarias, supermercados, restaurantes, buffets, eventos, empresas) em cidades específicas.
+   - **NUNCA invente endereços, CEPs, bairros ou localizações específicas** de estabelecimentos não presentes nos dados do sistema.
+   - Ao ser perguntado sobre **potenciais clientes ou estabelecimentos em determinadas cidades**, SEMPRE:
+     a) Sugira **tipos/categorias de negócios** que costumam comprar doces (ex: confeitarias, padarias, buffets, supermercados, lojas de doces, eventos corporativos).
+     b) Indique **como o usuário pode encontrar esses estabelecimentos** na cidade desejada (Google Maps, buscas locais, feiras, associações comerciais).
+     c) Se houver clientes já cadastrados no sistema com aquela cidade, mencione-os como referência.
+     d) Informe claramente: *"Não possuo acesso a um banco de dados atualizado de estabelecimentos locais. Para encontrar negócios específicos, recomendo pesquisar no Google Maps ou no Cadastro Nacional de Empresas."*
+   - **Se a ferramenta de busca (Google Search) não retornar resultados concretos** sobre um estabelecimento ou endereço, informe isso ao usuário em vez de inventar uma resposta.
 `;
 
     const contents = formatGeminiContents(history, message);

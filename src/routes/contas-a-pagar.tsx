@@ -244,9 +244,16 @@ function ContasPage() {
 
   const pendentes = contas.filter((c) => c.status === "pendente");
   const recorrentesAtivos = pendentes.filter((c: any) => c.recorrente && !c.finalizado_em);
+  const totalRecorrentes = recorrentesAtivos.reduce((s, c) => s + Number((c as any).valor), 0);
 
-  const filtradas = pendentes
-    .filter((c) => c.vencimento >= inicioMes && c.vencimento <= fimMes)
+  // Contas do mês filtrado
+  const contasMes = pendentes.filter((c) => c.vencimento >= inicioMes && c.vencimento <= fimMes);
+  // Contas recorrentes ativas fora do mês filtrado (aparecem mesmo em outros meses)
+  const recorrentesOutrosMeses = recorrentesAtivos.filter(
+    (c) => !(c.vencimento >= inicioMes && c.vencimento <= fimMes)
+  );
+
+  const filtradas = [...contasMes, ...recorrentesOutrosMeses]
     .filter((c) => normalizar(c.fornecedor).includes(normalizar(busca)))
     .sort((a, b) => {
       const av = (a as any)[sortKey], bv = (b as any)[sortKey];
@@ -305,6 +312,32 @@ function ContasPage() {
         </div>
       </div>
 
+      {/* KPI: Recorrentes */}
+      {recorrentesAtivos.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <Card className="border-primary/30 bg-primary/5">
+            <CardContent className="pt-5 pb-4">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs uppercase tracking-wide text-muted-foreground">Recorrentes ativos</span>
+                <Repeat className="size-4 text-primary" />
+              </div>
+              <div className="text-2xl font-semibold tabular-nums text-primary">{recorrentesAtivos.length}</div>
+              <div className="text-xs text-muted-foreground mt-0.5">contratos / despesas fixas</div>
+            </CardContent>
+          </Card>
+          <Card className="border-primary/30 bg-primary/5 sm:col-span-2">
+            <CardContent className="pt-5 pb-4">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs uppercase tracking-wide text-muted-foreground">Total mensal recorrente</span>
+                <Repeat className="size-4 text-primary" />
+              </div>
+              <div className="text-2xl font-semibold tabular-nums text-primary">{brl(totalRecorrentes)}</div>
+              <div className="text-xs text-muted-foreground mt-0.5">soma de todas as contas recorrentes pendentes</div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) { setEditId(null); setForm(emptyForm); } }}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{editId ? "Editar conta" : "Nova conta"}</DialogTitle></DialogHeader>
@@ -323,7 +356,7 @@ function ContasPage() {
 
             {form.categoria === "folha_pagamento" ? (
               <>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label>Funcionário</Label>
                     <Input value={form.funcionario_nome} onChange={(e) => setF("funcionario_nome", e.target.value)} />
@@ -350,7 +383,7 @@ function ContasPage() {
               <Input value={form.descricao} onChange={(e) => setF("descricao", e.target.value)} />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Vencimento</Label>
                 <Input type="date" value={form.vencimento} onChange={(e) => setF("vencimento", e.target.value)} />
@@ -463,22 +496,30 @@ function ContasPage() {
               {filtradas.map((c: any) => {
                 const dd = Math.ceil((new Date(c.vencimento).getTime() - new Date(hojeStr).getTime()) / 86400000);
                 const vencida = dd < 0;
+                const isOutroMes = c.recorrente && !c.finalizado_em && !(c.vencimento >= inicioMes && c.vencimento <= fimMes);
                 return (
-                  <TableRow key={c.id}>
+                  <TableRow key={c.id} className={isOutroMes ? "bg-primary/5 hover:bg-primary/10" : undefined}>
                     <TableCell className="font-medium">
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         {c.fornecedor}
-                        {c.recorrente && !c.finalizado_em && <Repeat className="size-3 text-primary" />}
+                        {c.recorrente && !c.finalizado_em && <Repeat className="size-3 text-primary shrink-0" />}
+                        {isOutroMes && (
+                          <Badge className="text-[10px] px-1.5 py-0 bg-primary/20 text-primary hover:bg-primary/20 pointer-events-none border border-primary/30">
+                            venc. {dataBR(c.vencimento)}
+                          </Badge>
+                        )}
                       </div>
                       {c.funcionario_cargo && <div className="text-xs text-muted-foreground">{c.funcionario_cargo}</div>}
                     </TableCell>
                     <TableCell><Badge variant="outline">{catLabel[c.categoria as Categoria]}</Badge></TableCell>
-                    <TableCell>{dataBR(c.vencimento)}</TableCell>
+                    <TableCell className={isOutroMes ? "text-primary font-medium" : undefined}>{dataBR(c.vencimento)}</TableCell>
                     <TableCell>
-                      {vencida ? <Badge className="bg-destructive text-destructive-foreground hover:bg-destructive pointer-events-none">Vencida há {Math.abs(dd)}d</Badge>
-                        : dd === 0 ? <Badge className="bg-warning text-warning-foreground hover:bg-warning pointer-events-none">Vence hoje</Badge>
-                          : dd <= 3 ? <Badge className="bg-warning text-warning-foreground hover:bg-warning pointer-events-none">Vence em {dd}d</Badge>
-                            : <Badge variant="secondary" className="hover:bg-secondary pointer-events-none">Em {dd}d</Badge>}
+                      {isOutroMes
+                        ? <Badge className="bg-primary/20 text-primary hover:bg-primary/20 border border-primary/30 pointer-events-none">Recorrente</Badge>
+                        : vencida ? <Badge className="bg-destructive text-destructive-foreground hover:bg-destructive pointer-events-none">Vencida há {Math.abs(dd)}d</Badge>
+                          : dd === 0 ? <Badge className="bg-warning text-warning-foreground hover:bg-warning pointer-events-none">Vence hoje</Badge>
+                            : dd <= 3 ? <Badge className="bg-warning text-warning-foreground hover:bg-warning pointer-events-none">Vence em {dd}d</Badge>
+                              : <Badge variant="secondary" className="hover:bg-secondary pointer-events-none">Em {dd}d</Badge>}
                     </TableCell>
                     <TableCell className="text-right tabular-nums font-semibold">{brl(c.valor)}</TableCell>
                     <TableCell className="text-right">

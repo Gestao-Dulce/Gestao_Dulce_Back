@@ -265,7 +265,7 @@ function ClientesPage() {
       </Card>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{editId ? "Editar cliente" : "Novo cliente"}</DialogTitle></DialogHeader>
           <form onSubmit={form.handleSubmit((v) => upsert.mutate(v))} className="space-y-4">
             <div className="space-y-1.5">
@@ -289,12 +289,12 @@ function ClientesPage() {
                 onChange={(e) => form.setValue("contato", formatPhone(e.target.value), { shouldValidate: true })}
               />
             </div>
-            <div className="grid grid-cols-[1fr_auto] gap-2 items-end">
-              <div className="space-y-1.5">
+            <div className="flex gap-2 items-end">
+              <div className="space-y-1.5 flex-1">
                 <Label>CEP</Label>
                 <Input placeholder="00000-000" {...form.register("cep")} />
               </div>
-              <Button type="button" variant="outline" onClick={buscarCep} disabled={buscandoCep}>
+              <Button type="button" variant="outline" onClick={buscarCep} disabled={buscandoCep} className="shrink-0">
                 {buscandoCep ? <Loader2 className="size-4 animate-spin" /> : <Search className="size-4" />}
                 <span className="ml-1">Buscar</span>
               </Button>
@@ -303,7 +303,7 @@ function ClientesPage() {
               <Label>Rua</Label>
               <Input {...form.register("rua")} />
             </div>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <div className="space-y-1.5">
                 <Label>Número</Label>
                 <Input {...form.register("numero")} />
