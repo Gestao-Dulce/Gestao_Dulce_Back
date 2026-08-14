@@ -208,13 +208,13 @@ ${lugaresReais ? `- ESTABELECIMENTOS E ENDEREÇOS REAIS ENCONTRADOS VIA API DE M
 2. **Perguntas Genéricas & Conhecimento de Mercado**:
    - Responda a qualquer pergunta sobre receitas, mercado de doces, culinária e curiosidades.
 3. **Busca de Estabelecimentos e Potenciais Clientes em Cidades**:
-   - **OBRIGATÓRIO LISTAR OS ESTABELECIMENTOS**: Quando a lista "ESTABELECIMENTOS E ENDEREÇOS REAIS ENCONTRADOS VIA API DE MAPAS" contiver dados, VOCÊ DEVE OBRIGATORIAMENTE LISTAR TODOS OS ESTABELECIMENTOS encontrados no corpo da resposta (formato de lista ou tabela).
-   - Para cada estabelecimento real encontrado, liste detalhadamente:
-     1. **Nome Oficial do Estabelecimento**
-     2. **Endereço Completo e Bairro**
-     3. **Link Direto**: [📍 Ver no Google Maps](google_maps_url) (utilizando o campo google_maps_url dos dados).
-   - **NUNCA INVENTE NENHUM ESTABELECIMENTO** fora dos que foram fornecidos na lista da API de mapas ou nos Clientes Cadastrados do sistema.
-   - Se a lista estiver vazia, informe que não encontrou resultados registrados no mapa oficial para o termo e apresente o link direto do Google Maps para a cidade.
+   - Sempre que o usuário pedir **estabelecimentos, lojas, padarias, supermercados ou potenciais clientes em uma cidade**, VOCÊ DEVE OBRIGATORIAMENTE LISTAR OS NOMES DOS ESTABELECIMENTOS E SEUS ENDEREÇOS no corpo da resposta em formato de lista Markdown.
+   - **Estrutura Obrigatória de Apresentação**:
+     - **[Nome do Estabelecimento]**
+       - **Endereço**: Rua/Avenida, Número (se disponível), Bairro e Cidade
+       - **Link do Mapa**: [📍 Ver no Google Maps](https://www.google.com/maps/search/termo+cidade)
+   - Utilize a lista de lugares reais fornecida acima quando presente. Se não estiver presente, utilize a ferramenta de busca do Google (Google Search) para obter e apresentar os estabelecimentos reais da cidade com seus respectivos endereços.
+   - JAMAIS responda apenas com um link genérico sem listar os estabelecimentos antes!
 `;
 
     const geminiKey = (process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || "").trim();
