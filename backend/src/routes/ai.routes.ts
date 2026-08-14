@@ -82,43 +82,57 @@ function extractGeminiText(resJson: any): string {
 // Função auxiliar para buscar estabelecimentos e endereços reais via API oficial de Mapas
 async function fetchRealPlaces(userMessage: string) {
   try {
-    const msg = userMessage.toLowerCase();
-    // Detecta palavras-chave de busca comercial/lugares
-    const isPlacesQuery = /supermercado|padaria|loja|confeitaria|mercado|buffet|comercio|estabelecimento|cliente|posto|posto de combustivel/i.test(msg);
+    const msg = userMessage.trim();
+    // Detecta se é uma busca por clientes/lugares/cidade
+    const isPlacesQuery = /supermercado|padaria|loja|confeitaria|mercado|buffet|comercio|estabelecimento|cliente|posto|açougue|distribuidora|tupã|marília|Presidente prudente|bauru|araçatuba|cidade/i.test(msg);
     if (!isPlacesQuery) return null;
 
-    // Tenta extrair a cidade informada ou padrões de cidade
-    const cityMatch = msg.match(/(?:em|de|para|na cidade de)\s+([a-zA-záàâãéèêíóòôõúç\s]+)/i);
-    const queryTerm = userMessage.trim();
-
-    const searchUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(queryTerm)}&format=json&addressdetails=1&limit=10&countrycodes=br`;
-    const res = await fetch(searchUrl, {
+    // Constrói termo de busca (ex: "supermercados Tupã SP Brasil")
+    const searchUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(msg)}&format=json&addressdetails=1&limit=15&countrycodes=br`;
+    let res = await fetch(searchUrl, {
       headers: {
         "User-Agent": "GestaoDulceApp/1.0 (contato@doceslucelian.com.br)"
       }
     });
 
     if (!res.ok) return null;
-    const places = await res.json();
+    let places = await res.json();
+
+    // Se a busca direta não retornar resultados, faz um fallback agregando o termo com Brasil
+    if (!Array.isArray(places) || places.length === 0) {
+      const fallbackUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(msg + " SP Brasil")}&format=json&addressdetails=1&limit=15&countrycodes=br`;
+      const fbRes = await fetch(fallbackUrl, {
+        headers: { "User-Agent": "GestaoDulceApp/1.0 (contato@doceslucelian.com.br)" }
+      });
+      if (fbRes.ok) {
+        places = await fbRes.json();
+      }
+    }
+
     if (!Array.isArray(places) || places.length === 0) return null;
 
     return places.map((p: any) => {
       const addr = p.address || {};
-      const road = addr.road || addr.street || "";
+      const name = p.name || p.display_name?.split(",")[0] || "Estabelecimento Commercial";
+      const road = addr.road || addr.street || addr.pedestrian || "";
       const houseNumber = addr.house_number || "";
       const suburb = addr.suburb || addr.neighbourhood || addr.city_district || "";
-      const city = addr.city || addr.town || addr.municipality || "";
+      const city = addr.city || addr.town || addr.municipality || addr.village || "";
       const state = addr.state || "";
-      const fullAddress = [road ? `${road}${houseNumber ? `, ${houseNumber}` : ""}` : "", suburb, city, state].filter(Boolean).join(" - ");
+      
+      const fullAddress = [
+        road ? `${road}${houseNumber ? `, ${houseNumber}` : ""}` : "",
+        suburb ? `Bairro: ${suburb}` : "",
+        city,
+        state
+      ].filter(Boolean).join(" - ");
 
       return {
-        nome_oficial: p.display_name?.split(",")[0] || p.name || "Estabelecimento Local",
-        categoria: p.type || p.class || "Comércio",
+        nome_oficial: name,
+        tipo_comercio: p.type || p.class || "Comércio",
         endereco_completo: fullAddress || p.display_name,
         cidade: city,
-        latitude: p.lat,
-        longitude: p.lon,
-        google_maps_url: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.display_name)}`
+        google_maps_url: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name + " " + (fullAddress || city))}`
       };
     });
   } catch (err) {
@@ -202,13 +216,13 @@ ${lugaresReais ? `- ESTABELECIMENTOS E ENDEREÇOS REAIS ENCONTRADOS VIA API DE M
 2. **Perguntas Genéricas & Conhecimento de Mercado**:
    - Responda a qualquer pergunta sobre receitas, mercado de doces, culinária e curiosidades.
 3. **Busca de Estabelecimentos e Potenciais Clientes em Cidades**:
-   - **FONTE ÚNICA E OFICIAL DE LUGARES**: Apresente estritamente a lista de "ESTABELECIMENTOS E ENDEREÇOS REAIS ENCONTRADOS VIA API DE MAPAS" acima ou os clientes cadastrados no sistema.
-   - **NUNCA INVENTE OU SUPONHA** nomes de estabelecimentos ou endereços que não constem na lista acima.
-   - Para cada estabelecimento real encontrado, exiba:
-     - **Nome Oficial**
-     - **Endereço Completo / Bairro**
-     - **Link do Google Maps**: [📍 Ver no Google Maps](URL) utilizando a URL retornada nos dados.
-   - Se a lista de lugares reais estiver vazia ou indisponível, informe educadamente que não encontrou estabelecimentos no mapa para o termo e forneça o link direto de pesquisa do Google Maps.
+   - **OBRIGATÓRIO LISTAR OS ESTABELECIMENTOS**: Quando a lista "ESTABELECIMENTOS E ENDEREÇOS REAIS ENCONTRADOS VIA API DE MAPAS" contiver dados, VOCÊ DEVE OBRIGATORIAMENTE LISTAR TODOS OS ESTABELECIMENTOS encontrados no corpo da resposta (formato de lista ou tabela).
+   - Para cada estabelecimento real encontrado, liste detalhadamente:
+     1. **Nome Oficial do Estabelecimento**
+     2. **Endereço Completo e Bairro**
+     3. **Link Direto**: [📍 Ver no Google Maps](google_maps_url) (utilizando o campo google_maps_url dos dados).
+   - **NUNCA INVENTE NENHUM ESTABELECIMENTO** fora dos que foram fornecidos na lista da API de mapas ou nos Clientes Cadastrados do sistema.
+   - Se a lista estiver vazia, informe que não encontrou resultados registrados no mapa oficial para o termo e apresente o link direto do Google Maps para a cidade.
 `;
 
     const contents = formatGeminiContents(history, message);
