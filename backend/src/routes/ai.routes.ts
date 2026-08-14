@@ -79,16 +79,57 @@ function extractGeminiText(resJson: any): string {
   return "";
 }
 
+function extractCityFromMessage(userMessage: string): string {
+  const msg = userMessage.trim();
+  const knownCities = [
+    "Tupã", "Marília", "Presidente Prudente", "Bauru", "Araçatuba", "Assis",
+    "Adamantina", "Osvaldo Cruz", "Bastos", "Lucélia", "Pompeia", "Garça",
+    "Lins", "Ourinhos", "Maracaí", "Paraguaçu Paulista", "Rinópolis", "Iacri",
+    "Herculândia", "Quintana", "Dracena", "São Paulo", "Campinas", "Santos",
+    "Ribeirão Preto", "Sorocaba", "São José do Rio Preto"
+  ];
+
+  for (const city of knownCities) {
+    const regex = new RegExp(`\\b${city}\\b`, "i");
+    if (regex.test(msg)) {
+      return city;
+    }
+  }
+
+  const cityMatch = msg.match(/(?:em|de|na cidade de|no município de)\s+([A-ZÀ-Ú][a-zà-ú]+(?:\s+[A-ZÀ-Ú][a-zà-ú]+)*)/i);
+  if (cityMatch && cityMatch[1]) {
+    const candidate = cityMatch[1].trim();
+    const ignoreTerms = ["supermercado", "supermercados", "padaria", "padarias", "loja", "lojas", "mercado", "mercados", "comércio", "clientes", "doces"];
+    if (!ignoreTerms.includes(candidate.toLowerCase())) {
+      return candidate;
+    }
+  }
+
+  return "";
+}
+
 // Função auxiliar para buscar estabelecimentos e endereços reais via API oficial de Mapas
 async function fetchRealPlaces(userMessage: string) {
   try {
     const msg = userMessage.trim();
-    // Detecta se é uma busca por clientes/lugares/cidade
     const isPlacesQuery = /supermercado|padaria|loja|confeitaria|mercado|buffet|comercio|estabelecimento|cliente|posto|açougue|distribuidora|tupã|marília|Presidente prudente|bauru|araçatuba|cidade/i.test(msg);
     if (!isPlacesQuery) return null;
 
-    // Constrói termo de busca (ex: "supermercados Tupã SP Brasil")
-    const searchUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(msg)}&format=json&addressdetails=1&limit=15&countrycodes=br`;
+    const targetCity = extractCityFromMessage(msg);
+
+    // Limpa a mensagem para termos de busca focados
+    let cleanQuery = msg
+      .replace(/quais|onde|tem|são|os|as|me|mostre|lista|de|em|na|no|cidade|município|encontre|estabelecimentos|locais/gi, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    if (targetCity && !cleanQuery.toLowerCase().includes(targetCity.toLowerCase())) {
+      cleanQuery = `${cleanQuery} ${targetCity}`;
+    }
+
+    const searchQuery = `${cleanQuery} ${targetCity ? "" : "SP Brasil"}`.trim();
+
+    const searchUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchQuery)}&format=json&addressdetails=1&limit=20&countrycodes=br`;
     let res = await fetch(searchUrl, {
       headers: {
         "User-Agent": "GestaoDulceApp/1.0 (contato@doceslucelian.com.br)"
@@ -98,9 +139,9 @@ async function fetchRealPlaces(userMessage: string) {
     if (!res.ok) return null;
     let places = await res.json();
 
-    // Se a busca direta não retornar resultados, faz um fallback agregando o termo com Brasil
     if (!Array.isArray(places) || places.length === 0) {
-      const fallbackUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(msg + " SP Brasil")}&format=json&addressdetails=1&limit=15&countrycodes=br`;
+      const fallbackQuery = targetCity ? `${cleanQuery} ${targetCity} SP Brasil` : `${msg} SP Brasil`;
+      const fallbackUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(fallbackQuery)}&format=json&addressdetails=1&limit=20&countrycodes=br`;
       const fbRes = await fetch(fallbackUrl, {
         headers: { "User-Agent": "GestaoDulceApp/1.0 (contato@doceslucelian.com.br)" }
       });
@@ -111,13 +152,26 @@ async function fetchRealPlaces(userMessage: string) {
 
     if (!Array.isArray(places) || places.length === 0) return null;
 
+    // Filtra estritamente por cidade se uma cidade alvo tiver sido identificada
+    if (targetCity) {
+      const cityLower = targetCity.toLowerCase();
+      places = places.filter((p: any) => {
+        const addr = p.address || {};
+        const pCity = (addr.city || addr.town || addr.municipality || addr.village || addr.county || addr.suburb || "").toLowerCase();
+        const displayName = (p.display_name || "").toLowerCase();
+        return pCity.includes(cityLower) || displayName.includes(cityLower);
+      });
+    }
+
+    if (places.length === 0) return null;
+
     return places.map((p: any) => {
       const addr = p.address || {};
-      const name = p.name || p.display_name?.split(",")[0] || "Estabelecimento Commercial";
+      const name = p.name || p.display_name?.split(",")[0] || "Estabelecimento Comercial";
       const road = addr.road || addr.street || addr.pedestrian || "";
       const houseNumber = addr.house_number || "";
       const suburb = addr.suburb || addr.neighbourhood || addr.city_district || "";
-      const city = addr.city || addr.town || addr.municipality || addr.village || "";
+      const city = addr.city || addr.town || addr.municipality || addr.village || targetCity || "";
       const state = addr.state || "";
       
       const fullAddress = [
@@ -216,7 +270,10 @@ ${lugaresReais ? `- ESTABELECIMENTOS E ENDEREÇOS REAIS ENCONTRADOS VIA API DE M
 2. **Perguntas Genéricas & Conhecimento de Mercado**:
    - Responda a qualquer pergunta sobre receitas, mercado de doces, culinária e curiosidades.
 3. **Busca de Estabelecimentos e Potenciais Clientes em Cidades**:
-   - Sempre que o usuário pedir **estabelecimentos, lojas, padarias, supermercados ou potenciais clientes em uma cidade**, VOCÊ DEVE OBRIGATORIAMENTE LISTAR OS NOMES DOS ESTABELECIMENTOS E SEUS ENDEREÇOS no corpo da resposta em formato de lista Markdown.
+   - **FILTRAGEM RIGOROSA DE CIDADE (CRÍTICO)**: Quando o usuário solicitar estabelecimentos (supermercados, padarias, lojas, confeitarias, etc.) de uma CIDADE ESPECÍFICA (ex: Tupã, Marília, etc.), você DEVE listar E recomendar APENAS estabelecimentos que pertençam E estejam COMPROVADAMENTE localizados NESSA MESMA CIDADE solicitada.
+   - JAMAIS inclua, misture ou mencione estabelecimentos de outras cidades, municípios vizinhos ou regiões diferentes da cidade solicitada (a menos que o usuário peça explicitamente por "região" ou "cidades vizinhas").
+   - Se a lista de API de Mapas ou os resultados do Google Search trouxerem estabelecimentos de outras cidades, FILTRE-OS E IGNORE-OS completamente antes de responder.
+   - Sempre liste os nomes dos estabelecimentos e seus respectivos endereços no corpo da resposta em formato de lista Markdown.
    - **Estrutura Obrigatória de Apresentação**:
      - **[Nome do Estabelecimento]**
        - **Endereço**: Rua/Avenida, Número (se disponível), Bairro e Cidade
