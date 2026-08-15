@@ -198,10 +198,10 @@ function Dashboard() {
       </div>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-3">
+        <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-3 border-b pb-4">
           <div>
             <CardTitle>Movimentação financeira</CardTitle>
-            <p className="text-xs text-muted-foreground mt-1">Acompanha o filtro acima · {label}</p>
+            <p className="text-xs text-muted-foreground mt-1">Visão comparativa e detalhamento diário · {label}</p>
           </div>
           <Select value={serie} onValueChange={(v) => setSerie(v as Serie)}>
             <SelectTrigger className="w-[220px]"><SelectValue /></SelectTrigger>
@@ -212,19 +212,59 @@ function Dashboard() {
             </SelectContent>
           </Select>
         </CardHeader>
-        <CardContent className="h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data.dias}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-              <XAxis dataKey="dia" stroke="var(--color-muted-foreground)" fontSize={12} />
-              <YAxis stroke="var(--color-muted-foreground)" fontSize={12} />
-              <Tooltip formatter={(v: number) => brl(v)} contentStyle={{ background: "var(--color-card)", border: "1px solid var(--color-border)", borderRadius: 8 }} />
-              <Legend />
-              {(serie === "ambos" || serie === "vendas_contas") && <Bar key="vendas" dataKey="vendas" name="Vendas" fill="var(--color-success)" radius={[4, 4, 0, 0]} />}
-              {(serie === "ambos" || serie === "vendas_contas") && <Bar key="contas" dataKey="contas" name="Contas pagas" fill="var(--color-destructive)" radius={[4, 4, 0, 0]} />}
-              {(serie === "ambos" || serie === "lucro") && <Bar key="lucro" dataKey="lucro" name="Resultado líquido" fill="var(--color-chart-4)" radius={[4, 4, 0, 0]} />}
-            </BarChart>
-          </ResponsiveContainer>
+        <CardContent className="p-4 sm:p-6 space-y-6">
+          {/* Gráfico Visual Clean e Espaçado */}
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={data.dias} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" opacity={0.5} />
+                <XAxis dataKey="dia" stroke="var(--color-muted-foreground)" fontSize={11} tickLine={false} axisLine={false} />
+                <YAxis stroke="var(--color-muted-foreground)" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v) => `R$${v}`} />
+                <Tooltip formatter={(v: number) => brl(v)} contentStyle={{ background: "var(--color-card)", border: "1px solid var(--color-border)", borderRadius: 8, boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }} />
+                <Legend iconType="circle" wrapperStyle={{ paddingTop: 10, fontSize: 12 }} />
+                {(serie === "ambos" || serie === "vendas_contas") && <Bar key="vendas" dataKey="vendas" name="Entradas (Vendas)" fill="#22c55e" radius={[4, 4, 0, 0]} maxBarSize={40} />}
+                {(serie === "ambos" || serie === "vendas_contas") && <Bar key="contas" dataKey="contas" name="Saídas (Pagas)" fill="#ef4444" radius={[4, 4, 0, 0]} maxBarSize={40} />}
+                {(serie === "ambos" || serie === "lucro") && <Bar key="lucro" dataKey="lucro" name="Resultado Líquido" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={40} />}
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Tabela de Resumo de Fácil Visualização */}
+          <div className="border rounded-lg overflow-hidden bg-background shadow-sm">
+            <div className="bg-muted/40 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center justify-between border-b">
+              <span>Histórico por Dia ({label})</span>
+              <span>Total no Período: <strong className="text-foreground">{data.dias.length} dias</strong></span>
+            </div>
+            <div className="max-h-56 overflow-y-auto divide-y divide-border">
+              {data.dias.slice().reverse().map((d, i) => (
+                <div key={i} className="px-4 py-2.5 flex items-center justify-between text-sm hover:bg-muted/30 transition-colors">
+                  <div className="font-medium text-foreground w-20">{d.dia}</div>
+                  <div className="flex items-center gap-4 sm:gap-8 text-right font-mono text-xs sm:text-sm">
+                    {(serie === "ambos" || serie === "vendas_contas") && (
+                      <div>
+                        <span className="text-[10px] text-muted-foreground block font-sans">Vendas</span>
+                        <span className="text-emerald-600 font-semibold">{d.vendas > 0 ? brl(d.vendas) : "—"}</span>
+                      </div>
+                    )}
+                    {(serie === "ambos" || serie === "vendas_contas") && (
+                      <div>
+                        <span className="text-[10px] text-muted-foreground block font-sans">Contas</span>
+                        <span className="text-red-600 font-semibold">{d.contas > 0 ? brl(d.contas) : "—"}</span>
+                      </div>
+                    )}
+                    {(serie === "ambos" || serie === "lucro") && (
+                      <div>
+                        <span className="text-[10px] text-muted-foreground block font-sans">Líquido</span>
+                        <span className={`font-semibold ${d.lucro >= 0 ? "text-blue-600" : "text-red-600"}`}>
+                          {brl(d.lucro)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </CardContent>
       </Card>
 
