@@ -83,7 +83,7 @@ function imprimirVenda(v: any) {
 
 type Item = { id: string; produto: string; quantidade: number; valor_unitario: number; unidade: string };
 
-const UNIDADES = ["unidade", "kg", "caixa"];
+const UNIDADES = ["unidade"];
 
 function calcStatus(v: any): "pago" | "pendente" | "atrasado" {
   if (v.status_pagamento === "pago") return "pago";
@@ -785,20 +785,9 @@ function VendaDialog({ open, onClose, clientes, produtosUsados, produtosCadastra
                     <Label>Nome</Label>
                     <Input value={npNome} onChange={(e) => setNpNome(e.target.value)} autoFocus />
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <Label>Unidade</Label>
-                      <Select value={npUnidade} onValueChange={setNpUnidade}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {UNIDADES.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label>Valor (R$)</Label>
-                      <CurrencyInput value={npValor} onValueChange={setNpValor} />
-                    </div>
+                  <div className="space-y-1.5">
+                    <Label>Valor (R$)</Label>
+                    <CurrencyInput value={npValor} onValueChange={setNpValor} />
                   </div>
                   <div className="space-y-1.5">
                     <Label>Observação</Label>
