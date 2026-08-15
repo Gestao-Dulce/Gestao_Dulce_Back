@@ -79,33 +79,86 @@ function extractGeminiText(resJson: any): string {
   return "";
 }
 
-function extractCityFromMessage(userMessage: string): string {
-  const msg = userMessage.trim();
-  const knownCities = [
-    "Tupã", "Marília", "Presidente Prudente", "Bauru", "Araçatuba", "Assis",
-    "Adamantina", "Osvaldo Cruz", "Bastos", "Lucélia", "Pompeia", "Garça",
-    "Lins", "Ourinhos", "Maracaí", "Paraguaçu Paulista", "Rinópolis", "Iacri",
-    "Herculândia", "Quintana", "Dracena", "São Paulo", "Campinas", "Santos",
-    "Ribeirão Preto", "Sorocaba", "São José do Rio Preto"
-  ];
+function normalizeText(text: string): string {
+  if (!text) return "";
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
 
-  for (const city of knownCities) {
-    const regex = new RegExp(`\\b${city}\\b`, "i");
-    if (regex.test(msg)) {
+const KNOWN_CITIES = [
+  "Tupã", "Marília", "Presidente Prudente", "Bauru", "Araçatuba", "Assis",
+  "Adamantina", "Osvaldo Cruz", "Bastos", "Lucélia", "Pompeia", "Garça",
+  "Lins", "Ourinhos", "Maracaí", "Paraguaçu Paulista", "Rinópolis", "Iacri",
+  "Herculândia", "Quintana", "Dracena", "São Paulo", "Campinas", "Santos",
+  "Ribeirão Preto", "Sorocaba", "São José do Rio Preto", "Presidente Epitácio",
+  "Presidente Venceslau", "Jaú", "Botucatu", "Araraquara", "São Carlos"
+];
+
+function extractCityFromMessage(userMessage: string): string {
+  const normMsg = normalizeText(userMessage);
+
+  for (const city of KNOWN_CITIES) {
+    const normCity = normalizeText(city);
+    const regex = new RegExp(`\\b${normCity}\\b`, "i");
+    if (regex.test(normMsg)) {
       return city;
     }
   }
 
-  const cityMatch = msg.match(/(?:em|de|na cidade de|no município de)\s+([A-ZÀ-Ú][a-zà-ú]+(?:\s+[A-ZÀ-Ú][a-zà-ú]+)*)/i);
+  const cityMatch = userMessage.match(/(?:em|de|na cidade de|no município de|para)\s+([a-zA-Zà-úÀ-Ú]+(?:\s+[a-zA-Zà-úÀ-Ú]+)*)/i);
   if (cityMatch && cityMatch[1]) {
     const candidate = cityMatch[1].trim();
-    const ignoreTerms = ["supermercado", "supermercados", "padaria", "padarias", "loja", "lojas", "mercado", "mercados", "comércio", "clientes", "doces"];
-    if (!ignoreTerms.includes(candidate.toLowerCase())) {
+    const ignoreTerms = ["supermercado", "supermercados", "padaria", "padarias", "loja", "lojas", "mercado", "mercados", "comércio", "clientes", "doces", "produtos", "vendas", "região", "cidades"];
+    if (!ignoreTerms.includes(normalizeText(candidate))) {
       return candidate;
     }
   }
 
   return "";
+}
+
+function filterResponseByCity(text: string, targetCity: string): string {
+  if (!targetCity || !text) return text;
+
+  const normTarget = normalizeText(targetCity);
+  const otherCities = KNOWN_CITIES.filter((c) => normalizeText(c) !== normTarget);
+
+  const blocks = text.split(/(?=\n(?:-|\*|\d+\.)\s)/);
+
+  const filteredBlocks = blocks.filter((block) => {
+    const normBlock = normalizeText(block);
+
+    if (!normBlock.includes("-") && !normBlock.includes("*") && !/^\d+\./.test(block.trim())) {
+      return true;
+    }
+
+    const mentionedOtherCity = otherCities.find((otherCity) => {
+      const normOther = normalizeText(otherCity);
+      const regex = new RegExp(`\\b${normOther}\\b`, "i");
+      return regex.test(normBlock);
+    });
+
+    if (mentionedOtherCity) {
+      if (!normBlock.includes(normTarget)) {
+        return false;
+      }
+
+      const hasOtherCityInAddress =
+        new RegExp(`(?:endereço|cidade|bairro|localizado|em)\\s*:[^\\n]*\\b${normalizeText(mentionedOtherCity)}\\b`, "i").test(normBlock) ||
+        new RegExp(`-\\s*\\b${normalizeText(mentionedOtherCity)}\\b\\s*-\\s*sp`, "i").test(normBlock);
+
+      if (hasOtherCityInAddress) {
+        return false;
+      }
+    }
+
+    return true;
+  });
+
+  return filteredBlocks.join("");
 }
 
 // Função auxiliar para buscar estabelecimentos e endereços reais via API oficial de Mapas
@@ -123,13 +176,13 @@ async function fetchRealPlaces(userMessage: string) {
       .replace(/\s+/g, " ")
       .trim();
 
-    if (targetCity && !cleanQuery.toLowerCase().includes(targetCity.toLowerCase())) {
+    if (targetCity && !normalizeText(cleanQuery).includes(normalizeText(targetCity))) {
       cleanQuery = `${cleanQuery} ${targetCity}`;
     }
 
     const searchQuery = `${cleanQuery} ${targetCity ? "" : "SP Brasil"}`.trim();
 
-    const searchUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchQuery)}&format=json&addressdetails=1&limit=20&countrycodes=br`;
+    const searchUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchQuery)}&format=json&addressdetails=1&limit=25&countrycodes=br`;
     let res = await fetch(searchUrl, {
       headers: {
         "User-Agent": "GestaoDulceApp/1.0 (contato@doceslucelian.com.br)"
@@ -141,7 +194,7 @@ async function fetchRealPlaces(userMessage: string) {
 
     if (!Array.isArray(places) || places.length === 0) {
       const fallbackQuery = targetCity ? `${cleanQuery} ${targetCity} SP Brasil` : `${msg} SP Brasil`;
-      const fallbackUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(fallbackQuery)}&format=json&addressdetails=1&limit=20&countrycodes=br`;
+      const fallbackUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(fallbackQuery)}&format=json&addressdetails=1&limit=25&countrycodes=br`;
       const fbRes = await fetch(fallbackUrl, {
         headers: { "User-Agent": "GestaoDulceApp/1.0 (contato@doceslucelian.com.br)" }
       });
@@ -154,12 +207,13 @@ async function fetchRealPlaces(userMessage: string) {
 
     // Filtra estritamente por cidade se uma cidade alvo tiver sido identificada
     if (targetCity) {
-      const cityLower = targetCity.toLowerCase();
+      const normTarget = normalizeText(targetCity);
       places = places.filter((p: any) => {
         const addr = p.address || {};
-        const pCity = (addr.city || addr.town || addr.municipality || addr.village || addr.county || addr.suburb || "").toLowerCase();
-        const displayName = (p.display_name || "").toLowerCase();
-        return pCity.includes(cityLower) || displayName.includes(cityLower);
+        const pCity = normalizeText(addr.city || addr.town || addr.municipality || addr.village || addr.county || "");
+        const displayName = normalizeText(p.display_name || "");
+        const fullAddr = normalizeText(Object.values(addr).join(" "));
+        return pCity.includes(normTarget) || displayName.includes(normTarget) || fullAddr.includes(normTarget);
       });
     }
 
@@ -238,11 +292,21 @@ router.post("/chat", async (req: Request, res: Response): Promise<void> => {
       year: "numeric",
     });
 
+    const targetCity = extractCityFromMessage(message);
+
+    const cityConstraintNotice = targetCity
+      ? `\n\n🚨🚨 ATENÇÃO MÁXIMA - FILTRO DE CIDADE OBRIGATÓRIO PARA: "${targetCity.toUpperCase()}" 🚨🚨\n` +
+        `O usuário solicitou informações EXCLUSIVAMENTE sobre a cidade de **${targetCity}**.\n` +
+        `- Você DEVE listar/recomendar APENAS estabelecimentos que estejam COMPROVADAMENTE na cidade de **${targetCity}**.\n` +
+        `- É RIGOROSAMENTE PROIBIDO incluir estabelecimentos de outras cidades (como Marília, Bauru, Presidente Prudente, Osvaldo Cruz, Bastos, Assis, etc.).\n` +
+        `- Se qualquer dado ou busca contiver um local fora de ${targetCity}, IGNORE E REMOVA esse local imediatamente.\n`
+      : "";
+
     const systemPromptText = `
 Você é o assistente inteligente da fábrica de doces **Doces Lucelian** — Sistema **Gestão Dulce**.
 Sua missão é ajudar o administrador respondendo perguntas de forma concisa, educada e direta baseando-se tanto nos dados do sistema interno quanto em fontes externas.
 Utilize formatação Markdown para deixar as respostas organizadas (listas, negritos e tabelas curtas são recomendados).
-
+${cityConstraintNotice}
 ---
 ### DADOS REAIS DO SISTEMA INTERNO (Atualizados em: ${dataAtual})
 
@@ -280,7 +344,7 @@ ${lugaresReais ? `- ESTABELECIMENTOS E ENDEREÇOS REAIS ENCONTRADOS VIA API DE M
        - **Link do Mapa**: [📍 Ver no Google Maps](https://www.google.com/maps/search/termo+cidade)
    - Utilize a lista de lugares reais fornecida acima quando presente. Se não estiver presente, utilize a ferramenta de busca do Google (Google Search) para obter e apresentar os estabelecimentos reais da cidade com seus respectivos endereços.
    - JAMAIS responda apenas com um link genérico sem listar os estabelecimentos antes!
-`;
+${cityConstraintNotice}`;
 
     const contents = formatGeminiContents(history, message);
 
@@ -351,7 +415,9 @@ ${lugaresReais ? `- ESTABELECIMENTOS E ENDEREÇOS REAIS ENCONTRADOS VIA API DE M
       return;
     }
 
-    res.json({ text: aiText });
+    const filteredAiText = filterResponseByCity(aiText, targetCity);
+
+    res.json({ text: filteredAiText });
   } catch (err: any) {
     console.error("[AI Route Error]", err);
     res.status(500).json({ error: err.message || "Erro interno ao processar chat de IA." });
