@@ -41,7 +41,7 @@ const NOMES_MESES = [
 ];
 
 function Dashboard() {
-  const [periodo, setPeriodo] = useState<Periodo>("30");
+  const [periodo, setPeriodo] = useState<Periodo>("7");
   const [mesSelecionado, setMesSelecionado] = useState<number>(new Date().getMonth());
   const [anoSelecionado, setAnoSelecionado] = useState<number>(new Date().getFullYear());
   const [serie, setSerie] = useState<Serie>("vendas_contas");

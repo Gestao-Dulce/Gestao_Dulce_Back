@@ -114,7 +114,7 @@ export function AppShell() {
               <img
                 src={logoLucelian}
                 alt="Doces Lucelian"
-                className="h-10 md:h-12 w-auto object-contain transition-transform hover:scale-105"
+                className="h-14 md:h-16 w-auto object-contain transition-transform hover:scale-105"
               />
             </div>
             <div className="flex items-center justify-end gap-2">
@@ -171,7 +171,7 @@ export function AppShell() {
 
             {/* Center: Logo Lucelian Mobile */}
             <div className="flex items-center justify-center">
-              <img src={logoLucelian} alt="Doces Lucelian" className="h-8 w-auto object-contain" />
+              <img src={logoLucelian} alt="Doces Lucelian" className="h-10 w-auto object-contain" />
             </div>
 
             {/* Right side: Action buttons */}
