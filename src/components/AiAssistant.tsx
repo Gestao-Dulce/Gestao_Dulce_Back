@@ -298,21 +298,20 @@ export const aiChatFn = createServerFn({ method: "POST" })
     const isEstablishmentQuery = /supermercado|supermercados|padaria|padarias|loja|lojas|confeitaria|confeitarias|mercado|mercados|buffet|buffets|comércio|comercio|estabelecimento|estabelecimentos|posto|postos|açougue|açougues|distribuidora|distribuidoras|lanchonete|lanchonetes|restaurante|restaurantes/i.test(message);
 
     if (isEstablishmentQuery || (targetCity && /quais|onde|encontre|busca|mostrar|lista|tem|opções|opcoes/i.test(message))) {
-      const searchTerm = message
-        .replace(/quais|onde|tem|são|os|as|me|mostre|lista|de|em|na|no|cidade|município|encontre|estabelecimentos|locais|para|vender|clientes|potenciais|doces/gi, " ")
-        .replace(/\s+/g, " ")
-        .trim();
+      // Identifica a categoria/termo principal da busca
+      const categoryMatch = message.match(/(supermercados?|padarias?|confeitariais?|lojas?|mercados?|buffets?|comércios?|comercios?|estabelecimentos?|postos?|açougues?|distribuidoras?|lanchonetes?|restaurantes?)/i);
+      const category = categoryMatch ? categoryMatch[1].toLowerCase() : "estabelecimentos comerciais";
+      
+      const cityText = targetCity || "Tupã";
+      const searchQuery = `${category} em ${cityText} SP`;
+      const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(searchQuery)}`;
 
-      const cityText = targetCity || "sua cidade";
-      const finalQuery = searchTerm ? `${searchTerm} em ${cityText} SP` : `estabelecimentos comerciais em ${cityText} SP`;
-      const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(finalQuery)}`;
-
-      const responseText = `Aqui está o link do Google Maps para visualizar todos os estabelecimentos atualizados diretamente na cidade de **${cityText}**:\n\n` +
-        `📍 [Clique aqui para abrir os resultados no Google Maps](${mapsUrl})\n\n` +
-        `**Indicações para localização:**\n` +
-        `- Ao abrir o mapa, ative o filtro **"Aberto agora"** ou ordene por **"Avaliação"**.\n` +
-        `- Clique nos marcadores no mapa para conferir o endereço exato, telefone de contato e horário de funcionamento atualizado.\n` +
-        `- Utilize a exibição em lista do Google Maps para navegar facilmente pelos comércios da região.`;
+      const responseText = `Aqui está o link oficial do Google Maps para visualizar os **${category}** em **${cityText}**:\n\n` +
+        `📍 [Ver no Google Maps](${mapsUrl})\n\n` +
+        `**Indicações úteis no Google Maps:**\n` +
+        `- Clique no link acima para abrir a busca exata no aplicativo ou navegador.\n` +
+        `- Ative o filtro **"Aberto agora"** para ver apenas os locais em funcionamento no momento.\n` +
+        `- Consulte avaliações, fotos, telefones de contato e rotas direto no mapa.`;
 
       return { text: responseText };
     }
