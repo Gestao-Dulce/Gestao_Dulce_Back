@@ -294,18 +294,34 @@ router.post("/chat", async (req: Request, res: Response): Promise<void> => {
 
     const targetCity = extractCityFromMessage(message);
 
-    const cityConstraintNotice = targetCity
-      ? `\n\n🚨🚨 ATENÇÃO MÁXIMA - FILTRO DE CIDADE OBRIGATÓRIO PARA: "${targetCity.toUpperCase()}" 🚨🚨\n` +
-        `O usuário solicitou informações EXCLUSIVAMENTE sobre a cidade de **${targetCity}**.\n` +
-        `- Você DEVE listar/recomendar APENAS estabelecimentos que estejam COMPROVADAMENTE na cidade de **${targetCity}**.\n` +
-        `- É RIGOROSAMENTE PROIBIDO incluir estabelecimentos de outras cidades (como Marília, Bauru, Presidente Prudente, Osvaldo Cruz, Bastos, Assis, etc.).\n` +
-        `- Se qualquer dado ou busca contiver um local fora de ${targetCity}, IGNORE E REMOVA esse local imediatamente.\n`
-      : "";
+    // Se for uma consulta de estabelecimentos por cidade, retorna DIRETAMENTE 1 link do Google Maps com indicações
+    const isEstablishmentQuery = /supermercado|supermercados|padaria|padarias|loja|lojas|confeitaria|confeitarias|mercado|mercados|buffet|buffets|comércio|comercio|estabelecimento|estabelecimentos|posto|postos|açougue|açougues|distribuidora|distribuidoras|lanchonete|lanchonetes|restaurante|restaurantes/i.test(message);
+
+    if (isEstablishmentQuery || (targetCity && /quais|onde|encontre|busca|mostrar|lista|tem|opções|opcoes/i.test(message))) {
+      const searchTerm = message
+        .replace(/quais|onde|tem|são|os|as|me|mostre|lista|de|em|na|no|cidade|município|encontre|estabelecimentos|locais|para|vender|clientes|potenciais|doces/gi, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+
+      const cityText = targetCity || "sua cidade";
+      const finalQuery = searchTerm ? `${searchTerm} em ${cityText} SP` : `estabelecimentos comerciais em ${cityText} SP`;
+      const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(finalQuery)}`;
+
+      const responseText = `Aqui está o link do Google Maps para visualizar todos os estabelecimentos atualizados diretamente na cidade de **${cityText}**:\n\n` +
+        `📍 [Clique aqui para abrir os resultados no Google Maps](${mapsUrl})\n\n` +
+        `**Indicações para localização:**\n` +
+        `- Ao abrir o mapa, ative o filtro **"Aberto agora"** ou ordene por **"Avaliação"**.\n` +
+        `- Clique nos marcadores no mapa para conferir o endereço exato, telefone de contato e horário de funcionamento atualizado.\n` +
+        `- Utilize a exibição em lista do Google Maps para navegar facilmente pelos comércios da região.`;
+
+      res.json({ text: responseText });
+      return;
+    }
 
     const systemPromptText = `
 Você é o assistente inteligente da fábrica de doces **Doces Lucelian** — Sistema **Gestão Dulce**.
-Sua missão é ajudar o administrador respondendo perguntas de forma concisa, educada e direta baseando-se tanto nos dados do sistema interno quanto em fontes externas.
-Utilize formatação Markdown para deixar as respostas organizadas (listas, negritos e tabelas curtas são recomendados).
+Sua missão é ajudar o administrador respondendo perguntas de forma concisa, educada e direta baseando-se nos dados do sistema interno e fornecendo orientações úteis.
+Utilize formatação Markdown para deixar as respostas organizadas (listas, negritos e links).
 ${cityConstraintNotice}
 ---
 ### DADOS REAIS DO SISTEMA INTERNO (Atualizados em: ${dataAtual})
@@ -326,24 +342,18 @@ ${JSON.stringify(contas)}
 ### DADOS E COTAÇÕES EXTERNAS EM TEMPO REAL:
 - Cotações Financeiras de Moedas: ${JSON.stringify(cotacoes ?? "Indisponível no momento")}
 ${dadosExternos ? `- Integração de API Externa Customizada: ${JSON.stringify(dadosExternos)}` : ""}
-${lugaresReais ? `- ESTABELECIMENTOS E ENDEREÇOS REAIS ENCONTRADOS VIA API DE MAPAS: ${JSON.stringify(lugaresReais)}` : ""}
 ---
 
 ### REGRAS E DIRETRIZES:
 1. Responda em Português do Brasil (pt-BR) de forma amigável, clara e objetiva.
 2. **Perguntas Genéricas & Conhecimento de Mercado**:
    - Responda a qualquer pergunta sobre receitas, mercado de doces, culinária e curiosidades.
-3. **Busca de Estabelecimentos e Potenciais Clientes em Cidades**:
-   - **FILTRAGEM RIGOROSA DE CIDADE (CRÍTICO)**: Quando o usuário solicitar estabelecimentos (supermercados, padarias, lojas, confeitarias, etc.) de uma CIDADE ESPECÍFICA (ex: Tupã, Marília, etc.), você DEVE listar E recomendar APENAS estabelecimentos que pertençam E estejam COMPROVADAMENTE localizados NESSA MESMA CIDADE solicitada.
-   - JAMAIS inclua, misture ou mencione estabelecimentos de outras cidades, municípios vizinhos ou regiões diferentes da cidade solicitada (a menos que o usuário peça explicitamente por "região" ou "cidades vizinhas").
-   - Se a lista de API de Mapas ou os resultados do Google Search trouxerem estabelecimentos de outras cidades, FILTRE-OS E IGNORE-OS completamente antes de responder.
-   - Sempre liste os nomes dos estabelecimentos e seus respectivos endereços no corpo da resposta em formato de lista Markdown.
-   - **Estrutura Obrigatória de Apresentação**:
-     - **[Nome do Estabelecimento]**
-       - **Endereço**: Rua/Avenida, Número (se disponível), Bairro e Cidade
-       - **Link do Mapa**: [📍 Ver no Google Maps](https://www.google.com/maps/search/termo+cidade)
-   - Utilize a lista de lugares reais fornecida acima quando presente. Se não estiver presente, utilize a ferramenta de busca do Google (Google Search) para obter e apresentar os estabelecimentos reais da cidade com seus respectivos endereços.
-   - JAMAIS responda apenas com um link genérico sem listar os estabelecimentos antes!
+3. **Solicitações de Estabelecimentos Comercial por Cidade (MUITO IMPORTANTE)**:
+   - Quando o usuário solicitar estabelecimentos comerciais em cidades (ex: padarias em Tupã, supermercados em Marília, lojas de doces em Bauru, etc.):
+     - **NÃO cite ou invente nomes de estabelecimentos específicos** no corpo da resposta para evitar informar locais em cidades erradas ou desatualizados.
+     - **Forneça o link direto de pesquisa do Google Maps** para a cidade e tipo de estabelecimento solicitado no seguinte formato:
+       `[Ver no Google Maps](https://www.google.com/maps/search/?api=1&query=TERMO+em+CIDADE+SP)`
+     - **Forneça orientações práticas e passo a passo** de como o usuário pode explorar os resultados no Google Maps (ex: verificar avaliações, horários de funcionamento, telefone e endereço exato).
 ${cityConstraintNotice}`;
 
     const contents = formatGeminiContents(history, message);
