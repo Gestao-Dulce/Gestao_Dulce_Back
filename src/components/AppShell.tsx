@@ -6,6 +6,7 @@ import { useTheme } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import logoDulce from "@/assets/logo-dulce.jpg";
+import logoLucelian from "@/assets/logo-lucelian.png";
 
 const nav = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -93,9 +94,9 @@ export function AppShell() {
         </div>
       </aside>
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="sticky top-0 z-10 border-b border-sidebar-border md:border-border px-4 md:px-10 py-3 md:py-4 flex items-center justify-between bg-sidebar md:bg-card text-sidebar-foreground md:text-foreground">
+        <header className="sticky top-0 z-10 border-b border-sidebar-border md:border-border px-4 md:px-10 py-2.5 flex items-center justify-between bg-sidebar md:bg-card text-sidebar-foreground md:text-foreground">
           {/* Desktop header view */}
-          <div className="hidden md:flex items-center justify-between w-full">
+          <div className="hidden md:grid grid-cols-3 items-center w-full">
             <div>
               <div className="text-[10px] tracking-[0.2em] uppercase text-primary font-medium">
                 Painel
@@ -109,7 +110,14 @@ export function AppShell() {
                 })}
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-center">
+              <img
+                src={logoLucelian}
+                alt="Doces Lucelian"
+                className="h-10 md:h-12 w-auto object-contain transition-transform hover:scale-105"
+              />
+            </div>
+            <div className="flex items-center justify-end gap-2">
               <Button id="tour-theme-toggle" variant="ghost" size="icon" onClick={toggle} aria-label="Alternar tema">
                 {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
               </Button>
@@ -121,7 +129,6 @@ export function AppShell() {
 
           {/* Mobile header view */}
           <div className="flex md:hidden items-center justify-between w-full">
-            {/* Left side: Menu toggle for sidebar */}
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
                 <Button id="tour-mobile-nav" variant="ghost" size="icon" className="text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground">
@@ -162,17 +169,19 @@ export function AppShell() {
               </SheetContent>
             </Sheet>
 
-            {/* Right side: Icon (Logo) and theme toggle */}
-            <div className="flex items-center gap-2">
+            {/* Center: Logo Lucelian Mobile */}
+            <div className="flex items-center justify-center">
+              <img src={logoLucelian} alt="Doces Lucelian" className="h-8 w-auto object-contain" />
+            </div>
+
+            {/* Right side: Action buttons */}
+            <div className="flex items-center gap-1">
               <Button variant="ghost" size="icon" onClick={() => { import("@/lib/tour").then(m => m.iniciarTutorial()) }} aria-label="Tutorial" className="size-8 text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground">
                 <HelpCircle className="size-4" />
               </Button>
               <Button variant="ghost" size="icon" onClick={toggle} aria-label="Alternar tema" className="size-8 text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground">
                 {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
               </Button>
-              <div className="bg-white p-1 rounded-lg shadow-sm flex items-center justify-center h-9">
-                <img src={logoDulce} alt="Gestão Dulce" className="h-7 w-auto object-contain" />
-              </div>
             </div>
           </div>
         </header>

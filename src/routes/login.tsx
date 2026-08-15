@@ -16,7 +16,7 @@ import {
   Mail, Lock, Eye, EyeOff, Loader2, Sparkles, CheckCircle2,
   TrendingUp, ShieldAlert, KeyRound, CheckCheck,
 } from "lucide-react";
-import logoLucelian from "@/assets/logo-lucelian.png";
+import logoDulce from "@/assets/logo-dulce.jpg";
 import { createServerFn } from "@tanstack/react-start";
 import bcryptjs from "bcryptjs";
 
@@ -289,11 +289,11 @@ function LoginPage() {
           </div>
 
           <div className="flex flex-col items-center justify-center flex-1 max-w-md mx-auto space-y-8 relative z-10">
-            <div className="w-48 h-48 bg-white/10 rounded-2xl flex items-center justify-center p-4 backdrop-blur-md shadow-2xl border border-white/20">
-              <img src={logoLucelian} alt="Doces Lucelian" className="w-full h-auto object-contain drop-shadow-[0_4px_8px_rgba(0,0,0,0.15)]" />
+            <div className="w-56 h-auto bg-white rounded-2xl flex items-center justify-center p-3 backdrop-blur-md shadow-2xl border border-white/20">
+              <img src={logoDulce} alt="Gestão Dulce" className="w-full h-auto object-contain rounded-xl drop-shadow-[0_4px_8px_rgba(0,0,0,0.15)]" />
             </div>
             <div className="text-center space-y-3">
-              <h1 className="text-4xl font-semibold tracking-tight font-script">Doces Lucelian</h1>
+              <h1 className="text-4xl font-bold tracking-tight">Gestão Dulce</h1>
               <p className="text-white/80 font-light leading-relaxed">
                 Painel Integrado de Gestão Financeira, Controle de Vendas e Fluxo de Caixa.
               </p>
@@ -317,7 +317,7 @@ function LoginPage() {
           </div>
 
           <div className="text-xs text-white/60 relative z-10">
-            © {new Date().getFullYear()} Doces Lucelian. Todos os direitos reservados.
+            © {new Date().getFullYear()} Gestão Dulce · Doces Lucelian. Todos os direitos reservados.
           </div>
         </div>
 
@@ -327,11 +327,11 @@ function LoginPage() {
 
             {/* Logo mobile */}
             <div className="flex flex-col items-center justify-center md:hidden space-y-4 text-center">
-              <div className="w-24 h-24 bg-primary/5 rounded-2xl flex items-center justify-center p-2 shadow-md border border-primary/10">
-                <img src={logoLucelian} alt="Doces Lucelian" className="w-full h-auto object-contain" />
+              <div className="w-36 bg-white rounded-2xl flex items-center justify-center p-2 shadow-md border border-primary/10">
+                <img src={logoDulce} alt="Gestão Dulce" className="w-full h-auto object-contain rounded-lg" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold font-script tracking-tight text-primary">Doces Lucelian</h2>
+                <h2 className="text-2xl font-bold tracking-tight text-primary">Gestão Dulce</h2>
                 <p className="text-xs text-muted-foreground mt-1">Gestão Financeira e Controle Geral</p>
               </div>
             </div>
