@@ -296,10 +296,16 @@ export const aiChatFn = createServerFn({ method: "POST" })
         `O usuário solicitou informações sobre a cidade de ${targetCity}.\n`
       : "";
 
-    // Se for uma consulta de estabelecimentos por cidade, retorna DIRETAMENTE 1 link do Google Maps com indicações
-    const isEstablishmentQuery = /supermercado|supermercados|padaria|padarias|loja|lojas|confeitaria|confeitarias|mercado|mercados|buffet|buffets|comércio|comercio|estabelecimento|estabelecimentos|posto|postos|açougue|açougues|distribuidora|distribuidoras|lanchonete|lanchonetes|restaurante|restaurantes/i.test(message);
+    // Apenas intercepta com o link do Google Maps se for busca de ESTABELECIMENTOS/LOCAIS FÍSICOS e NÃO for pesquisa de preços/produtos
+    const isPriceOrProductQuery = /preço|preco|preços|precos|quanto custa|valor|comparar|comparação|marca|marcas|peso|gramas|kg|quilo|embalagem|produtos|ingredientes|matéria-prima|materia prima|fornecedor|fornecedores/i.test(message);
 
-    if (isEstablishmentQuery || (targetCity && /quais|onde|encontre|busca|mostrar|lista|tem|opções|opcoes/i.test(message))) {
+    const hasSearchVerb = /onde|quais|encontrar|encontre|buscar|busca|mostrar|listar|lista|opções|opcoes|indicação|indicacao|indicações|indicacoes/i.test(message);
+    const hasPlaceCategory = /supermercados?|padarias?|confeitariais?|lojas?|mercados?|buffets?|comércios?|comercios?|estabelecimentos?|postos?|açougues?|distribuidoras?|lanchonetes?|restaurantes?/i.test(message);
+
+    // Precisa ter explicitamente a intenção de buscar locais + (categoria de comércio OU menção de cidade) E NÃO ser busca de preços
+    const isExplicitPlacesSearch = !isPriceOrProductQuery && ((hasSearchVerb && (hasPlaceCategory || Boolean(targetCity))) || (Boolean(targetCity) && hasPlaceCategory));
+
+    if (isExplicitPlacesSearch) {
       // Identifica a categoria/termo principal da busca
       const categoryMatch = message.match(/(supermercados?|padarias?|confeitariais?|lojas?|mercados?|buffets?|comércios?|comercios?|estabelecimentos?|postos?|açougues?|distribuidoras?|lanchonetes?|restaurantes?)/i);
       const category = categoryMatch ? categoryMatch[1].toLowerCase() : "estabelecimentos comerciais";
@@ -320,7 +326,7 @@ export const aiChatFn = createServerFn({ method: "POST" })
 
     const systemPromptText = `
 Você é o assistente inteligente da fábrica de doces **Doces Lucelian** — Sistema **Gestão Dulce**.
-Sua missão é ajudar o administrador respondendo perguntas de forma concisa, educada e direta baseando-se nos dados do sistema interno e fornecendo orientações úteis.
+Sua missão é ajudar o administrador respondendo perguntas de forma concisa, educada e direta baseando-se nos dados do sistema interno e em fontes externas na internet.
 Utilize formatação Markdown para deixar as respostas organizadas (listas, negritos e links).
 ${cityConstraintNotice}
 ---
@@ -348,12 +354,12 @@ ${dadosExternos ? `- Integração de API Externa Customizada: ${JSON.stringify(d
 1. Responda em Português do Brasil (pt-BR) de forma amigável, clara e objetiva.
 2. **Perguntas Genéricas & Conhecimento de Mercado**:
    - Responda a qualquer pergunta sobre receitas, mercado de doces, culinária e curiosidades.
-3. **Solicitações de Estabelecimentos Comercial por Cidade (MUITO IMPORTANTE)**:
-   - Quando o usuário solicitar estabelecimentos comerciais em cidades (ex: padarias em Tupã, supermercados em Marília, lojas de doces em Bauru, etc.):
-     - **NÃO cite ou invente nomes de estabelecimentos específicos** no corpo da resposta para evitar informar locais em cidades erradas ou desatualizados.
-     - **Forneça o link direto de pesquisa do Google Maps** para a cidade e tipo de estabelecimento solicitado no seguinte formato Markdown (substituindo TERMO e CIDADE):
-       link markdown: Ver no Google Maps apontando para https://www.google.com/maps/search/?api=1&query=TERMO+em+CIDADE+SP
-     - **Forneça orientações práticas e passo a passo** de como o usuário pode explorar os resultados no Google Maps (ex: verificar avaliações, horários de funcionamento, telefone e endereço exato).
+3. **Pesquisa e Comparação de Preços / Produtos na Internet**:
+   - Quando o usuário solicitar **preços, marcas, peso/gramatura, embalagens, comparação de valores ou análise de concorrência/ingredientes**:
+     - **Forneça detalhes completos de produtos vendidos no mercado e na internet**: apresente tabelas/listas com **Nome do Produto, Marca, Peso/Quantidade, Faixa de Preço Média e Onde Encontrar/Sites de Referência**.
+     - Utilize a busca em tempo real para trazer informações exatas e atualizadas do mercado de doces e confeitaria.
+4. **Solicitações de Estabelecimentos Comercial por Cidade**:
+   - Quando o usuário solicitar apenas onde ficam estabelecimentos físicos numa cidade, forneça o link direto de pesquisa do Google Maps conforme orientações.
 ${cityConstraintNotice}`;
 
     const geminiKey = (process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || "").trim();
