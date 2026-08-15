@@ -44,7 +44,7 @@ function Dashboard() {
   const [periodo, setPeriodo] = useState<Periodo>("30");
   const [mesSelecionado, setMesSelecionado] = useState<number>(new Date().getMonth());
   const [anoSelecionado, setAnoSelecionado] = useState<number>(new Date().getFullYear());
-  const [serie, setSerie] = useState<Serie>("ambos");
+  const [serie, setSerie] = useState<Serie>("vendas_contas");
 
   // Calcula inicioPeriodo e fimPeriodo conforme o tipo de filtro
   const getIntervalo = () => {

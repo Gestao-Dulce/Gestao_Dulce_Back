@@ -297,12 +297,12 @@ export const aiChatFn = createServerFn({ method: "POST" })
       : "";
 
     // Apenas intercepta com o link do Google Maps se for busca de ESTABELECIMENTOS/LOCAIS FÍSICOS e NÃO for pesquisa de preços/produtos
-    const isPriceOrProductQuery = /preço|preco|preços|precos|quanto custa|valor|comparar|comparação|marca|marcas|peso|gramas|kg|quilo|embalagem|produtos|ingredientes|matéria-prima|materia prima|fornecedor|fornecedores/i.test(message);
+    const isPriceOrProductQuery = /preço|preco|preços|precos|quanto custa|valor|valores|comparar|comparação|marca|marcas|peso|gramas|g\b|kg|quilo|embalagem|produtos|paçoca|paçocas|doce|doces|ingredientes|matéria-prima|materia prima|fornecedor|fornecedores/i.test(message);
 
     const hasSearchVerb = /onde|quais|encontrar|encontre|buscar|busca|mostrar|listar|lista|opções|opcoes|indicação|indicacao|indicações|indicacoes/i.test(message);
     const hasPlaceCategory = /supermercados?|padarias?|confeitariais?|lojas?|mercados?|buffets?|comércios?|comercios?|estabelecimentos?|postos?|açougues?|distribuidoras?|lanchonetes?|restaurantes?/i.test(message);
 
-    // Precisa ter explicitamente a intenção de buscar locais + (categoria de comércio OU menção de cidade) E NÃO ser busca de preços
+    // Precisa ter explicitamente a intenção de buscar locais + (categoria de comércio OU menção de cidade) E NÃO ser busca de preços/produtos
     const isExplicitPlacesSearch = !isPriceOrProductQuery && ((hasSearchVerb && (hasPlaceCategory || Boolean(targetCity))) || (Boolean(targetCity) && hasPlaceCategory));
 
     if (isExplicitPlacesSearch) {
@@ -354,12 +354,12 @@ ${dadosExternos ? `- Integração de API Externa Customizada: ${JSON.stringify(d
 1. Responda em Português do Brasil (pt-BR) de forma amigável, clara e objetiva.
 2. **Perguntas Genéricas & Conhecimento de Mercado**:
    - Responda a qualquer pergunta sobre receitas, mercado de doces, culinária e curiosidades.
-3. **Pesquisa e Comparação de Preços / Produtos na Internet**:
-   - Quando o usuário solicitar **preços, marcas, peso/gramatura, embalagens, comparação de valores ou análise de concorrência/ingredientes**:
-     - **Forneça detalhes completos de produtos vendidos no mercado e na internet**: apresente tabelas/listas com **Nome do Produto, Marca, Peso/Quantidade, Faixa de Preço Média e Onde Encontrar/Sites de Referência**.
-     - Utilize a busca em tempo real para trazer informações exatas e atualizadas do mercado de doces e confeitaria.
-4. **Solicitações de Estabelecimentos Comercial por Cidade**:
-   - Quando o usuário solicitar apenas onde ficam estabelecimentos físicos numa cidade, forneça o link direto de pesquisa do Google Maps conforme orientações.
+3. **Pesquisa e Comparação de Preços / Produtos na Internet (REGRA CRÍTICA)**:
+   - Quando o usuário solicitar **preços, marcas, peso/gramatura, embalagens, comparação de valores ou análise de doces/produtos** (ex: paçocas, chocolates, etc.):
+     - **Forneça detalhes completos de produtos vendidos no mercado e e-commerce**: apresente tabelas/listas com **Nome do Produto, Marca, Peso/Quantidade, Faixa de Preço Média e Onde Encontrar/Lojas Online (ex: Mercado Livre, Shopee, Supermercados online)**.
+     - **É PROIBIDO GERAR OU INCLUIR LINKS DO GOOGLE MAPS** nessas pesquisas de produtos/preços para não criar links fora de contexto (ex: "comercio e mercados em barra").
+4. **Solicitações Exclusivas de Estabelecimentos Físicos por Cidade**:
+   - Somente gere link do Google Maps quando o usuário pedir especificamente a localização física de comércios de uma cidade.
 ${cityConstraintNotice}`;
 
     const geminiKey = (process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || "").trim();
