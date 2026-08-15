@@ -289,6 +289,11 @@ export const aiChatFn = createServerFn({ method: "POST" })
 
     const targetCity = extractCityFromMessage(message);
 
+    const cityConstraintNotice = targetCity
+      ? `\n\nATENÇÃO - FILTRO DE CIDADE PARA: "${targetCity.toUpperCase()}"\n` +
+        `O usuário solicitou informações sobre a cidade de ${targetCity}.\n`
+      : "";
+
     // Se for uma consulta de estabelecimentos por cidade, retorna DIRETAMENTE 1 link do Google Maps com indicações
     const isEstablishmentQuery = /supermercado|supermercados|padaria|padarias|loja|lojas|confeitaria|confeitarias|mercado|mercados|buffet|buffets|comércio|comercio|estabelecimento|estabelecimentos|posto|postos|açougue|açougues|distribuidora|distribuidoras|lanchonete|lanchonetes|restaurante|restaurantes/i.test(message);
 

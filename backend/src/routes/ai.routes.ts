@@ -294,6 +294,11 @@ router.post("/chat", async (req: Request, res: Response): Promise<void> => {
 
     const targetCity = extractCityFromMessage(message);
 
+    const cityConstraintNotice = targetCity
+      ? `\n\nATENÇÃO - FILTRO DE CIDADE PARA: "${targetCity.toUpperCase()}"\n` +
+        `O usuário solicitou informações sobre a cidade de ${targetCity}.\n`
+      : "";
+
     // Se for uma consulta de estabelecimentos por cidade, retorna DIRETAMENTE 1 link do Google Maps com indicações
     const isEstablishmentQuery = /supermercado|supermercados|padaria|padarias|loja|lojas|confeitaria|confeitarias|mercado|mercados|buffet|buffets|comércio|comercio|estabelecimento|estabelecimentos|posto|postos|açougue|açougues|distribuidora|distribuidoras|lanchonete|lanchonetes|restaurante|restaurantes/i.test(message);
 
@@ -351,8 +356,8 @@ ${dadosExternos ? `- Integração de API Externa Customizada: ${JSON.stringify(d
 3. **Solicitações de Estabelecimentos Comercial por Cidade (MUITO IMPORTANTE)**:
    - Quando o usuário solicitar estabelecimentos comerciais em cidades (ex: padarias em Tupã, supermercados em Marília, lojas de doces em Bauru, etc.):
      - **NÃO cite ou invente nomes de estabelecimentos específicos** no corpo da resposta para evitar informar locais em cidades erradas ou desatualizados.
-     - **Forneça o link direto de pesquisa do Google Maps** para a cidade e tipo de estabelecimento solicitado no seguinte formato:
-       `[Ver no Google Maps](https://www.google.com/maps/search/?api=1&query=TERMO+em+CIDADE+SP)`
+     - **Forneça o link direto de pesquisa do Google Maps** para a cidade e tipo de estabelecimento solicitado no formato Markdown (substituindo TERMO e CIDADE):
+       link markdown: Ver no Google Maps apontando para https://www.google.com/maps/search/?api=1&query=TERMO+em+CIDADE+SP
      - **Forneça orientações práticas e passo a passo** de como o usuário pode explorar os resultados no Google Maps (ex: verificar avaliações, horários de funcionamento, telefone e endereço exato).
 ${cityConstraintNotice}`;
 
