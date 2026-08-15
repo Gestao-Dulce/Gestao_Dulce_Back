@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Cookie, X, Send, Mic, MicOff, User, Loader2 } from "lucide-react";
+import { Cookie, X, Send, Mic, MicOff, User, Loader2, Maximize2, Minimize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -18,6 +18,8 @@ const CANDIDATE_MODELS = [
   "gemini-flash-latest",
   "gemini-flash-lite-latest",
 ];
+
+
 
 function formatGeminiContents(history: ChatMessage[], currentMessage: string) {
   const rawTurns: Array<{ role: "user" | "model"; text: string }> = [];
@@ -434,6 +436,7 @@ ${cityConstraintNotice}`;
 
 export function AiAssistant() {
   const [open, setOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -584,7 +587,14 @@ export function AiAssistant() {
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
       {/* Chat Window */}
       {open && (
-        <Card className="w-[360px] sm:w-[420px] h-[500px] mb-4 flex flex-col shadow-2xl border-primary/20 animate-in fade-in slide-in-from-bottom-6 duration-300">
+        <Card
+          className={cn(
+            "mb-4 flex flex-col shadow-2xl border-primary/20 animate-in fade-in slide-in-from-bottom-6 transition-all duration-300",
+            isExpanded
+              ? "w-[calc(100vw-3rem)] sm:w-[700px] md:w-[850px] h-[calc(100vh-6rem)] max-h-[800px]"
+              : "w-[360px] sm:w-[420px] h-[500px]"
+          )}
+        >
           <CardHeader className="bg-primary text-primary-foreground py-3 px-4 flex flex-row items-center justify-between rounded-t-lg">
             <div className="flex items-center gap-2">
               <div className="size-8 rounded-full bg-white p-0.5 border-2 border-amber-300/60 flex items-center justify-center shrink-0 shadow-sm overflow-hidden">
@@ -595,14 +605,26 @@ export function AiAssistant() {
                 <span className="text-[10px] opacity-80 block">Online</span>
               </div>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-primary-foreground hover:bg-primary-foreground/10 size-8"
-              onClick={() => setOpen(false)}
-            >
-              <X className="size-4" />
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-primary-foreground hover:bg-primary-foreground/10 size-8"
+                onClick={() => setIsExpanded(!isExpanded)}
+                title={isExpanded ? "Restaurar tamanho" : "Expandir janela"}
+              >
+                {isExpanded ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-primary-foreground hover:bg-primary-foreground/10 size-8"
+                onClick={() => setOpen(false)}
+                title="Fechar chat"
+              >
+                <X className="size-4" />
+              </Button>
+            </div>
           </CardHeader>
 
           <CardContent className="flex-1 overflow-y-auto p-4 space-y-3 bg-muted/20">
