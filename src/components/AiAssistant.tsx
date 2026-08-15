@@ -296,16 +296,16 @@ export const aiChatFn = createServerFn({ method: "POST" })
         `O usuário solicitou informações sobre a cidade de ${targetCity}.\n`
       : "";
 
-    // Apenas intercepta com o link do Google Maps se for busca de ESTABELECIMENTOS/LOCAIS FÍSICOS e NÃO for pesquisa de preços/produtos
+    // Apenas intercepta com o link do Google Maps se for SOLICITADO ESPECIFICAMENTE indicação/localização de algum estabelecimento ou local
     const isPriceOrProductQuery = /preço|preco|preços|precos|quanto custa|valor|valores|comparar|comparação|marca|marcas|peso|gramas|g\b|kg|quilo|embalagem|produtos|paçoca|paçocas|doce|doces|ingredientes|matéria-prima|materia prima|fornecedor|fornecedores/i.test(message);
 
-    const hasSearchVerb = /onde|quais|encontrar|encontre|buscar|busca|mostrar|listar|lista|opções|opcoes|indicação|indicacao|indicações|indicacoes/i.test(message);
+    const hasIndicationVerb = /indique|indica|indicação|indicacao|indicações|indicacoes|recomende|recomenda|recomendação|recomendacao|onde fica|onde ficam|localização|localizacao|mapa|maps/i.test(message);
     const hasPlaceCategory = /supermercados?|padarias?|confeitariais?|lojas?|mercados?|buffets?|comércios?|comercios?|estabelecimentos?|postos?|açougues?|distribuidoras?|lanchonetes?|restaurantes?/i.test(message);
 
-    // Precisa ter explicitamente a intenção de buscar locais + (categoria de comércio OU menção de cidade) E NÃO ser busca de preços/produtos
-    const isExplicitPlacesSearch = !isPriceOrProductQuery && ((hasSearchVerb && (hasPlaceCategory || Boolean(targetCity))) || (Boolean(targetCity) && hasPlaceCategory));
+    // O link do Google Maps só é gerado se o usuário pediu ESPECIFICAMENTE uma indicação/localização de local físico e não for busca de produto/preço
+    const isExplicitIndicationSearch = !isPriceOrProductQuery && hasIndicationVerb && (hasPlaceCategory || Boolean(targetCity));
 
-    if (isExplicitPlacesSearch) {
+    if (isExplicitIndicationSearch) {
       // Identifica a categoria/termo principal da busca
       const categoryMatch = message.match(/(supermercados?|padarias?|confeitariais?|lojas?|mercados?|buffets?|comércios?|comercios?|estabelecimentos?|postos?|açougues?|distribuidoras?|lanchonetes?|restaurantes?)/i);
       const category = categoryMatch ? categoryMatch[1].toLowerCase() : "estabelecimentos comerciais";
@@ -314,7 +314,7 @@ export const aiChatFn = createServerFn({ method: "POST" })
       const searchQuery = `${category} em ${cityText} SP`;
       const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(searchQuery)}`;
 
-      const responseText = `Aqui está o link oficial do Google Maps para visualizar os **${category}** em **${cityText}**:\n\n` +
+      const responseText = `Aqui está o link oficial do Google Maps para visualizar as indicações de **${category}** em **${cityText}**:\n\n` +
         `📍 [Ver no Google Maps](${mapsUrl})\n\n` +
         `**Indicações úteis no Google Maps:**\n` +
         `- Clique no link acima para abrir a busca exata no aplicativo ou navegador.\n` +
