@@ -16,7 +16,7 @@ import { useState } from "react";
 
 export const Route = createFileRoute("/")({ component: Dashboard });
 
-type Periodo = "7" | "15" | "30" | "90" | "365";
+type Periodo = "7" | "15" | "30" | "90" | "365" | "mes_atual" | "mes_anterior" | "personalizado";
 type Serie = "ambos" | "lucro" | "vendas_contas";
 
 const catLabel: Record<string, string> = {
@@ -25,34 +25,75 @@ const catLabel: Record<string, string> = {
   outros: "Outros",
 };
 
-const periodoLabel: Record<Periodo, string> = {
+const periodoLabel: Record<string, string> = {
   "7": "últimos 7 dias",
   "15": "últimos 15 dias",
   "30": "últimos 30 dias",
   "90": "últimos 90 dias",
   "365": "último ano",
+  "mes_atual": "mês atual",
+  "mes_anterior": "mês anterior",
 };
+
+const NOMES_MESES = [
+  "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+];
 
 function Dashboard() {
   const [periodo, setPeriodo] = useState<Periodo>("30");
+  const [mesSelecionado, setMesSelecionado] = useState<number>(new Date().getMonth());
+  const [anoSelecionado, setAnoSelecionado] = useState<number>(new Date().getFullYear());
   const [serie, setSerie] = useState<Serie>("ambos");
 
-  const dias = Number(periodo);
+  // Calcula inicioPeriodo e fimPeriodo conforme o tipo de filtro
+  const getIntervalo = () => {
+    const agora = new Date();
+    let inicio = "";
+    let fim = agora.toISOString().slice(0, 10);
+    let labelTexto = periodoLabel[periodo] || "";
+
+    if (periodo === "mes_atual") {
+      const pDia = new Date(agora.getFullYear(), agora.getMonth(), 1);
+      const uDia = new Date(agora.getFullYear(), agora.getMonth() + 1, 0);
+      inicio = pDia.toISOString().slice(0, 10);
+      fim = uDia.toISOString().slice(0, 10);
+      labelTexto = `${NOMES_MESES[agora.getMonth()]} de ${agora.getFullYear()}`;
+    } else if (periodo === "mes_anterior") {
+      const pDia = new Date(agora.getFullYear(), agora.getMonth() - 1, 1);
+      const uDia = new Date(agora.getFullYear(), agora.getMonth(), 0);
+      inicio = pDia.toISOString().slice(0, 10);
+      fim = uDia.toISOString().slice(0, 10);
+      labelTexto = `${NOMES_MESES[pDia.getMonth()]} de ${pDia.getFullYear()}`;
+    } else if (periodo === "personalizado") {
+      const pDia = new Date(anoSelecionado, mesSelecionado, 1);
+      const uDia = new Date(anoSelecionado, mesSelecionado + 1, 0);
+      inicio = pDia.toISOString().slice(0, 10);
+      fim = uDia.toISOString().slice(0, 10);
+      labelTexto = `${NOMES_MESES[mesSelecionado]} de ${anoSelecionado}`;
+    } else {
+      const dias = Number(periodo);
+      inicio = new Date(Date.now() - (dias - 1) * 86400000).toISOString().slice(0, 10);
+    }
+
+    return { inicio, fim, labelTexto };
+  };
+
+  const { inicio: inicioPeriodo, fim: fimPeriodo, labelTexto: label } = getIntervalo();
 
   const { data, isLoading } = useQuery({
-    queryKey: ["dashboard", dias],
+    queryKey: ["dashboard", periodo, mesSelecionado, anoSelecionado],
     queryFn: async () => {
       const hojeStr = new Date().toISOString().slice(0, 10);
       const em15 = new Date(Date.now() + 15 * 86400000).toISOString().slice(0, 10);
-      const inicioPeriodo = new Date(Date.now() - (dias - 1) * 86400000).toISOString().slice(0, 10);
 
       const [vendasPer, contasPer, contasProx, topClientes, topProdutos] =
         await Promise.all([
-          supabase.from("vendas").select("data, valor_total, cliente_id, clientes(nome)").gte("data", inicioPeriodo),
-          supabase.from("contas_a_pagar").select("vencimento, valor, status, categoria").gte("vencimento", inicioPeriodo),
+          supabase.from("vendas").select("data, valor_total, cliente_id, clientes(nome)").gte("data", inicioPeriodo).lte("data", fimPeriodo),
+          supabase.from("contas_a_pagar").select("vencimento, valor, status, categoria").gte("vencimento", inicioPeriodo).lte("vencimento", fimPeriodo),
           supabase.from("contas_a_pagar").select("vencimento, valor, fornecedor, categoria").eq("status", "pendente").gte("vencimento", hojeStr).lte("vencimento", em15).order("vencimento"),
-          supabase.from("vendas").select("valor_total, cliente_id, clientes(nome)").gte("data", inicioPeriodo),
-          supabase.from("venda_itens").select("produto, quantidade, valor_unitario, vendas!inner(data)").gte("vendas.data", inicioPeriodo),
+          supabase.from("vendas").select("valor_total, cliente_id, clientes(nome)").gte("data", inicioPeriodo).lte("data", fimPeriodo),
+          supabase.from("venda_itens").select("produto, quantidade, valor_unitario, vendas!inner(data)").gte("vendas.data", inicioPeriodo).lte("vendas.data", fimPeriodo),
         ]);
 
       const vendasData = vendasPer.data ?? [];
@@ -78,14 +119,17 @@ function Dashboard() {
         total: v.pago + v.pendente,
       })).sort((a, b) => b.total - a.total);
 
-      // Buckets diários, baseados no período
+      // Gerar a lista de dias dentro do intervalo exato (inicioPeriodo até fimPeriodo)
+      const dtInicio = new Date(inicioPeriodo + "T00:00:00Z");
+      const dtFim = new Date(fimPeriodo + "T00:00:00Z");
       const buckets: { dia: string; vendas: number; contas: number; lucro: number }[] = [];
-      for (let i = dias - 1; i >= 0; i--) {
-        const d = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
+
+      for (let dt = new Date(dtInicio); dt <= dtFim; dt.setDate(dt.getDate() + 1)) {
+        const d = dt.toISOString().slice(0, 10);
         const v = vendasData.filter((x: any) => x.data === d).reduce((s: number, x: any) => s + Number(x.valor_total), 0);
         const c = contasData.filter((x: any) => x.vencimento === d && x.status === "pago").reduce((s: number, x: any) => s + Number(x.valor), 0);
         buckets.push({
-          dia: new Date(d).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", timeZone: "UTC" }),
+          dia: new Date(d + "T00:00:00Z").toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", timeZone: "UTC" }),
           vendas: v,
           contas: c,
           lucro: v - c,
@@ -128,7 +172,6 @@ function Dashboard() {
 
   const totalProx = data.contasProx.reduce((s, c: any) => s + Number(c.valor), 0);
   const lucroPositivo = data.lucro >= 0;
-  const label = periodoLabel[periodo];
 
   const gerarRelatorio = () => {
     imprimir({
@@ -150,24 +193,54 @@ function Dashboard() {
   const chartCats = data.categorias.filter((c) => c.total > 0);
   const cores = ["var(--color-chart-1)", "var(--color-chart-2)", "var(--color-chart-3)", "var(--color-chart-4)", "var(--color-chart-5)"];
 
+  // Anos para o seletor personalizado
+  const anosDisponiveis = [2024, 2025, 2026, 2027];
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h2 className="text-2xl font-semibold tracking-tight">Visão geral · {label}</h2>
-          <p className="text-sm text-muted-foreground">Use o filtro de período para alterar a janela analisada.</p>
+          <p className="text-sm text-muted-foreground">Use os filtros abaixo para escolher dias ou um mês específico.</p>
         </div>
-        <div className="flex gap-2 items-center">
+        <div className="flex gap-2 items-center flex-wrap">
           <Select value={periodo} onValueChange={(v) => setPeriodo(v as Periodo)}>
-            <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="w-[170px]"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="7">Últimos 7 dias</SelectItem>
               <SelectItem value="15">Últimos 15 dias</SelectItem>
               <SelectItem value="30">Últimos 30 dias</SelectItem>
               <SelectItem value="90">Últimos 90 dias</SelectItem>
               <SelectItem value="365">Último ano</SelectItem>
+              <SelectItem value="mes_atual">Mês Atual</SelectItem>
+              <SelectItem value="mes_anterior">Mês Anterior</SelectItem>
+              <SelectItem value="personalizado">📅 Escolher Mês</SelectItem>
             </SelectContent>
           </Select>
+
+          {/* Seleção de Mês e Ano quando for escolhido Mês Específico */}
+          {periodo === "personalizado" && (
+            <>
+              <Select value={String(mesSelecionado)} onValueChange={(v) => setMesSelecionado(Number(v))}>
+                <SelectTrigger className="w-[130px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {NOMES_MESES.map((m, idx) => (
+                    <SelectItem key={idx} value={String(idx)}>{m}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={String(anoSelecionado)} onValueChange={(v) => setAnoSelecionado(Number(v))}>
+                <SelectTrigger className="w-[100px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {anosDisponiveis.map((a) => (
+                    <SelectItem key={a} value={String(a)}>{a}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </>
+          )}
+
           <Button variant="outline" onClick={gerarRelatorio}><Printer className="size-4 mr-1" /> Relatório</Button>
         </div>
       </div>
