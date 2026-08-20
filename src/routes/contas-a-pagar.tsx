@@ -49,6 +49,17 @@ function quintoDiaUtil(year: number, month: number): string {
   return "";
 }
 
+function getVencimentoNoMes(c: any, ano: number, mes: number): string {
+  if (c.categoria === "folha_pagamento") {
+    const q = quintoDiaUtil(ano, mes - 1);
+    if (q) return q;
+  }
+  const day = Number(c.vencimento ? c.vencimento.slice(8, 10) : 1) || 1;
+  const maxDay = new Date(ano, mes, 0).getDate();
+  const validDay = Math.min(Math.max(day, 1), maxDay);
+  return `${ano}-${String(mes).padStart(2, "0")}-${String(validDay).padStart(2, "0")}`;
+}
+
 type FormState = {
   categoria: Categoria;
   fornecedor: string;
@@ -85,8 +96,8 @@ function ContasPage() {
   const [sortKey, setSortKey] = useState<"vencimento" | "fornecedor" | "valor" | "categoria">("vencimento");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
-  const hojeDate = new Date();
-  const quintoUtilStr = quintoDiaUtil(hojeDate.getFullYear(), hojeDate.getMonth());
+  const [anoF, mesF] = mesFiltro.split("-").map(Number);
+  const quintoUtilStr = quintoDiaUtil(anoF, mesF - 1);
 
   const { data: contas = [] } = useQuery({
     queryKey: ["contas"],
@@ -106,7 +117,10 @@ function ContasPage() {
 
   const abrirNovo = () => {
     setEditId(null);
-    setForm(emptyForm);
+    setForm({
+      ...emptyForm,
+      vencimento: quintoUtilStr || `${anoF}-${String(mesF).padStart(2, "0")}-05`,
+    });
     setUsarQuintoDiaUtil(false);
     setOpen(true);
   };
@@ -237,9 +251,9 @@ function ContasPage() {
     onError: (e: any) => toast.error(e.message),
   });
 
-  const [anoF, mesF] = mesFiltro.split("-").map(Number);
   const inicioMes = `${anoF}-${String(mesF).padStart(2, "0")}-01`;
-  const fimMes = new Date(anoF, mesF, 0).toISOString().slice(0, 10);
+  const maxDiasMes = new Date(anoF, mesF, 0).getDate();
+  const fimMes = `${anoF}-${String(mesF).padStart(2, "0")}-${String(maxDiasMes).padStart(2, "0")}`;
   const mesLabel = new Date(anoF, mesF - 1, 1).toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
 
   const pendentes = contas.filter((c) => c.status === "pendente");
@@ -256,7 +270,10 @@ function ContasPage() {
   const filtradas = [...contasMes, ...recorrentesOutrosMeses]
     .filter((c) => normalizar(c.fornecedor).includes(normalizar(busca)))
     .sort((a, b) => {
-      const av = (a as any)[sortKey], bv = (b as any)[sortKey];
+      const aVenc = a.recorrente && !a.finalizado_em ? getVencimentoNoMes(a, anoF, mesF) : a.vencimento;
+      const bVenc = b.recorrente && !b.finalizado_em ? getVencimentoNoMes(b, anoF, mesF) : b.vencimento;
+      const av = sortKey === "vencimento" ? aVenc : (a as any)[sortKey];
+      const bv = sortKey === "vencimento" ? bVenc : (b as any)[sortKey];
       if (av < bv) return sortDir === "asc" ? -1 : 1;
       if (av > bv) return sortDir === "asc" ? 1 : -1;
       return 0;
@@ -292,7 +309,7 @@ function ContasPage() {
       linhas: filtradas.map((c: any) => [
         c.fornecedor,
         catLabel[c.categoria as Categoria],
-        dataBR(c.vencimento),
+        dataBR(c.recorrente && !c.finalizado_em ? getVencimentoNoMes(c, anoF, mesF) : c.vencimento),
         brl(c.valor),
       ]),
       rodape: ["Total no período", "", "", brl(totalFiltrado)],
@@ -494,28 +511,25 @@ function ContasPage() {
             <TableBody>
               {filtradas.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Nada no período.</TableCell></TableRow>}
               {filtradas.map((c: any) => {
-                const dd = Math.ceil((new Date(c.vencimento).getTime() - new Date(hojeStr).getTime()) / 86400000);
+                const vencEfetivo = c.recorrente && !c.finalizado_em ? getVencimentoNoMes(c, anoF, mesF) : c.vencimento;
+                const dd = Math.ceil((new Date(vencEfetivo).getTime() - new Date(hojeStr).getTime()) / 86400000);
                 const vencida = dd < 0;
-                const isOutroMes = c.recorrente && !c.finalizado_em && !(c.vencimento >= inicioMes && c.vencimento <= fimMes);
                 return (
-                  <TableRow key={c.id} className={isOutroMes ? "bg-primary/5 hover:bg-primary/10" : undefined}>
+                  <TableRow key={c.id}>
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {c.fornecedor}
-                        {c.recorrente && !c.finalizado_em && <Repeat className="size-3 text-primary shrink-0" />}
-                        {isOutroMes && (
-                          <Badge className="text-[10px] px-1.5 py-0 bg-primary/20 text-primary hover:bg-primary/20 pointer-events-none border border-primary/30">
-                            venc. {dataBR(c.vencimento)}
-                          </Badge>
+                        {c.recorrente && !c.finalizado_em && (
+                          <Repeat className="size-3 text-primary shrink-0" />
                         )}
                       </div>
                       {c.funcionario_cargo && <div className="text-xs text-muted-foreground">{c.funcionario_cargo}</div>}
                     </TableCell>
                     <TableCell><Badge variant="outline">{catLabel[c.categoria as Categoria]}</Badge></TableCell>
-                    <TableCell className={isOutroMes ? "text-primary font-medium" : undefined}>{dataBR(c.vencimento)}</TableCell>
+                    <TableCell>{dataBR(vencEfetivo)}</TableCell>
                     <TableCell>
-                      {isOutroMes
-                        ? <Badge className="bg-primary/20 text-primary hover:bg-primary/20 border border-primary/30 pointer-events-none">Recorrente</Badge>
+                      {c.status === "pago"
+                        ? <Badge className="bg-emerald-600 text-white hover:bg-emerald-700 pointer-events-none">Pago</Badge>
                         : vencida ? <Badge className="bg-destructive text-destructive-foreground hover:bg-destructive pointer-events-none">Vencida há {Math.abs(dd)}d</Badge>
                           : dd === 0 ? <Badge className="bg-warning text-warning-foreground hover:bg-warning pointer-events-none">Vence hoje</Badge>
                             : dd <= 3 ? <Badge className="bg-warning text-warning-foreground hover:bg-warning pointer-events-none">Vence em {dd}d</Badge>
